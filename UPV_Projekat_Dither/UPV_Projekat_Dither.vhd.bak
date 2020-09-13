@@ -1,0 +1,378 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+entity UPV_Projekat_Dither is
+
+	port
+	(
+		clk_50 : in std_logic;		
+		reset : in std_logic;	
+			--pll
+		c_sdram : out std_logic;
+		c_cam : out std_logic;
+			--cam_ctr
+		S_C : out std_logic;	
+		S_D : out std_logic;			
+			--cam_read
+		cam_href : in std_logic;	
+		cam_vsync : in std_logic;	
+		cam_data : in std_logic_vector (7 downto 0);		
+			--SDRAM_control
+		sd_address : out std_logic_vector(13 downto 0);
+		sd_data : inout std_logic_vector(15 downto 0);
+		sd_cs : out std_logic;	
+		sd_ras : out std_logic;	
+		sd_cas : out std_logic;	
+		sd_dqmh : out std_logic;	
+		sd_dqml : out std_logic;	
+		sd_we : out std_logic;	
+		sd_cen : out std_logic;	
+			--vga_sync
+		vga_hsync : out std_logic;
+		vga_vsync : out std_logic;
+		sync_n : out std_logic;	
+		blank_n : out std_logic;	
+		vga_r : out std_logic;	
+		vga_g : out std_logic;	
+		vga_b : out std_logic
+	);
+end UPV_Projekat_Dither;
+
+
+architecture struct of UPV_Projekat_Dither is
+
+component pll is
+	port
+	(
+		inclk0	: in std_logic;
+		c_vga	: out std_logic;
+		c_sdram	: out std_logic;
+		c_cam	: out std_logic
+	);
+end component;
+
+
+component cam_ctr is
+	port
+	(
+		reset : in std_logic;
+		Pclk : in std_logic;
+		S_C, S_D : out std_logic;
+		busy : out std_logic
+	);
+end component;
+
+component cam_read is
+	port
+	(
+		reset : in	std_logic;
+		Pclk, Href, Vsync	: in  std_logic;
+		data : in std_logic_vector (7 downto 0);
+		R,G,B	: out std_logic_vector (4 downto 0);
+		valid: out std_logic := '0';
+		x	:out std_logic_vector (9 downto 0);
+		y 	:out std_logic_vector (8 downto 0)
+	);
+end component;
+
+component dither_engine is
+	generic
+	(
+		CAM_WIDTH : integer
+	);
+	port 
+	(
+		reset : in std_logic;
+		clk	: in std_logic;
+		valid	: in std_logic;
+		Vsync	: in std_logic;
+		rin, gin, bin	: in std_logic_vector(4 downto 0);
+		rgb_out	: out std_logic_vector(2 downto 0); --rgb
+		w_e	: out std_logic := '0';
+		adr	: out std_logic_vector(18 downto 0)
+	);
+end component;
+
+component write_interface is
+	port
+	(
+		din : in std_logic_vector(2 downto 0);
+		adr : in std_logic_vector(18 downto 0); --307200 pix -> 19 bits needed
+		w_e : in std_logic;
+		vsync:in std_logic;
+		clk : in std_logic;
+		finished_frame : out std_logic_vector(1 downto 0);
+		reset : in std_logic;
+		address_out:	out std_logic_vector(21 downto 0);
+		data_out : out std_logic_vector(15 downto 0)
+ 	);
+end component;
+
+component SDRAM_control is
+	port
+	(
+		reset 	: in	std_logic;
+		clk		: in	std_logic;
+		a_write, a_read : in std_logic_vector(21 downto 0); --nisam tacno siguran, 22 za 4M x 16 valjda :D
+		d_write	:	in std_logic_vector(15 downto 0);
+		d_read	:	out std_logic_vector(15 downto 0) := (others => '1');
+		w_complete	: out std_logic;
+		r_complete	: out std_logic;
+		--Interface with SDRAM
+		a_sdram 	: 	out std_logic_vector(13 downto 0);	--gornja 2 bita bank select
+		dq_sdram : 	inout std_logic_vector(15 downto 0);
+		cs_n		:	out std_logic;
+		ras_n		:	out std_logic;
+		cas_n 	:	out std_logic;
+		dqmh,dqml:	out std_logic;
+		we_n		:	out std_logic;
+		clk_en	:	out std_logic;
+		ready 	: 	out std_logic
+	);
+end component;
+
+component read_interface is
+	port
+	(
+		dout : out std_logic_vector(2 downto 0);
+		adr : in std_logic_vector(18 downto 0); --307200 pix -> 19 bits needed
+		finished_frame : in std_logic_vector(1 downto 0);
+		vsync:in std_logic;		--carefull, vsync is inverted here, pulses are 0
+		clk : in std_logic;
+		reset : in std_logic;
+		address_out:	out std_logic_vector(21 downto 0);
+		data_in : in std_logic_vector(15 downto 0)
+ 	);
+end component;
+
+component vga_interface is
+	generic (
+		H_DISPLAY: integer := 1024;	-- visible pixels
+		V_DISPLAY: integer := 768;		-- visible pixels
+		CAM_WIDTH : integer := 640;
+		CAM_HEIGHT : integer := 480
+	);
+	port
+	(
+		clk : in std_logic;
+		reset : in std_logic;
+		hpos : in integer range 0 to H_DISPLAY-1;
+		vpos : in integer range 0 to V_DISPLAY-1;
+		vsync : in std_logic;
+		din : in std_logic_vector(2 downto 0);
+		dout : out std_logic_vector(2 downto 0);
+		adr : out std_logic_vector(18 downto 0)
+ 	);
+end component;
+
+component vga_sync is
+	generic (
+		-- Default display mode is 1024x768@60Hz -- 60MHz clk
+		-- Horizontal line
+		H_SYNC	: integer := 136;		-- sync pulse in pixels
+		H_BP		: integer := 160;		-- back porch in pixels
+		H_FP		: integer := 24;		-- front porch in pixels
+		H_DISPLAY: integer := 1024;	-- visible pixels
+		-- Vertical line
+		V_SYNC	: integer := 6;		-- sync pulse in pixels
+		V_BP		: integer := 29;		-- back porch in pixels
+		V_FP		: integer := 3;		-- front porch in pixels
+		V_DISPLAY: integer := 768		-- visible pixels
+	);
+	port (
+		clk : in std_logic;
+		reset : in std_logic;
+		hsync, vsync : out std_logic;
+		sync_n, blank_n : out std_logic;
+		hpos : out integer range 0 to H_DISPLAY - 1;
+		vpos : out integer range 0 to V_DISPLAY - 1;
+		Rin, Gin, Bin : in std_logic;
+		Rout, Gout, Bout : out std_logic
+	);
+end component;
+
+--CONSTANTS
+constant H_DISPLAY: integer := 1024;
+constant V_DISPLAY: integer := 768;	
+constant CAM_WIDTH : integer := 640;
+constant CAM_HEIGHT : integer := 480;
+
+--INTERNAL SIGNALS
+	--pll
+signal c_vga : std_logic;	--c_vga
+signal c_sdram_int : std_logic;
+signal c_cam_int : std_logic;
+	--cam_ctr
+signal cam_busy : std_logic;	--busy
+	--cam_read
+signal R_cam : std_logic_vector(4 downto 0);	--R
+signal G_cam : std_logic_vector(4 downto 0);	--G
+signal B_cam : std_logic_vector(4 downto 0);	--B
+signal cam_data_valid : std_logic;	--valid
+	--dither_engine
+signal RGB_dither_write : std_logic_vector(2 downto 0);	--rgb_out
+signal write_pixel : std_logic;	--w_e
+signal write_adr : std_logic_vector(18 downto 0);	--adr
+	--write_interface
+signal finished_frame : std_logic_vector(1 downto 0);	--finished_frame
+signal s_ctr_wr_adr : std_logic_vector(21 downto 0);	--address_out
+signal s_ctr_wr_data : std_logic_vector(15 downto 0);	--data_out
+	--SDRAM_control
+signal s_ctr_rd_data : std_logic_vector(15 downto 0);	--d_read
+	--read_interface
+signal RGB_dither_read : std_logic_vector(2 downto 0);	--dout
+signal s_ctr_rd_adr : std_logic_vector(21 downto 0);	--address_out
+	--vga_interface
+signal vga_data : std_logic_vector(2 downto 0);	--dout
+signal read_adr : std_logic_vector(18 downto 0);	--adr
+	--vga_sync
+signal vga_x : integer range 0 to H_DISPLAY - 1;	--hpos
+signal vga_y : integer range 0 to V_DISPLAY - 1;	--vpos
+signal vga_vsync_int : std_logic;
+
+begin
+
+	vga_vsync <= vga_vsync_int;	--Zbog problema sa citanjem izlaznog porta
+	c_sdram <= c_sdram_int;
+	c_cam <= c_cam_int;
+	--PAZI,  MOZDA JE RESET INVERTOVAN
+
+pll_inst:  pll
+	port map (  
+		inclk0	=> clk_50,
+		c_vga => c_vga,
+		c_sdram	=> c_sdram_int,
+		c_cam => c_cam_int
+	);
+
+cam_ctr_inst:  cam_ctr
+	port map (  
+		reset => reset,
+		Pclk => c_cam_int,
+		S_C => S_C, 
+		S_D => S_D,
+		busy => cam_busy
+	);
+
+cam_read_inst:  cam_read
+	port map (  
+		reset => reset,
+		Pclk => c_cam_int,
+		Href => cam_href,
+		Vsync => cam_vsync,
+		data => cam_data,
+		R => R_cam,
+		G => G_cam,
+		B => B_cam,
+		valid => cam_data_valid,
+		x => OPEN,
+		y => OPEN
+	);
+
+dither_engine_inst:  dither_engine
+	generic map (  
+		CAM_WIDTH => CAM_WIDTH
+	)
+	port map (  
+		reset => reset,
+		clk	=> c_cam_int,
+		valid => cam_data_valid,
+		Vsync => cam_vsync,
+		rin => R_cam,
+		gin => G_cam,
+		bin => B_cam,
+		rgb_out	=> RGB_dither_write,
+		w_e	=> write_pixel,
+		adr	=> write_adr
+	);
+
+
+write_interface_inst:  write_interface
+	port map (  
+		din => RGB_dither_write,
+		adr => write_adr,
+		w_e => write_pixel,
+		vsync => cam_vsync,
+		clk => c_cam_int,
+		finished_frame => finished_frame,
+		reset => reset,
+		address_out => s_ctr_wr_adr,
+		data_out => s_ctr_wr_data
+ 	);
+
+SDRAM_control_inst:  SDRAM_control
+	port map (  
+		reset 	=> reset,
+		clk	=> c_sdram_int,
+		a_write => s_ctr_wr_adr,
+		a_read => s_ctr_rd_adr,
+		d_write	=> s_ctr_wr_data,
+		d_read => s_ctr_rd_data,
+		w_complete => OPEN,
+		r_complete => OPEN,
+		a_sdram => sd_address,
+		dq_sdram => sd_data,
+		cs_n => sd_cs,
+		ras_n => sd_ras,
+		cas_n => sd_cas,
+		dqmh => sd_dqmh,
+		dqml => sd_dqml,
+		we_n => sd_we,
+		clk_en => sd_cen,
+		ready => OPEN
+	);
+
+read_interface_inst:  read_interface
+	port map (  
+		dout => RGB_dither_read,
+		adr => read_adr,
+		finished_frame => finished_frame,
+		vsync => vga_vsync_int,
+		clk => c_sdram_int,
+		reset => reset,
+		address_out => s_ctr_rd_adr,
+		data_in => s_ctr_rd_data
+ 	);
+
+vga_interface_inst:  vga_interface
+	generic map (
+		H_DISPLAY => H_DISPLAY,
+		V_DISPLAY => V_DISPLAY,
+		CAM_WIDTH => CAM_WIDTH,
+		CAM_HEIGHT => CAM_HEIGHT 
+	)
+	port map (  
+		clk => c_vga,
+		reset => reset,
+		hpos => vga_x,
+		vpos => vga_y,
+		vsync => vga_vsync_int,
+		din => RGB_dither_read,
+		dout => vga_data,
+		adr => read_adr
+ 	);
+
+vga_sync_inst:  vga_sync
+	generic map (
+		H_DISPLAY => H_DISPLAY,
+		V_DISPLAY => V_DISPLAY
+	)
+	port map (  
+		clk => c_vga,
+		reset => reset,
+		hsync => vga_hsync,
+		vsync => vga_vsync_int,
+		sync_n => sync_n,
+		blank_n => blank_n,
+		hpos => vga_x,
+		vpos => vga_y,
+		Rin => vga_data(2),
+		Rin => vga_data(1),
+		Rin => vga_data(0),
+		Rout => vga_r,
+		Gout => vga_g,
+		Bout => vga_b
+	);
+
+end struct;

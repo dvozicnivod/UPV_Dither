@@ -1,0 +1,108 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity cam_ctr is
+
+	port
+	(
+		reset : in	std_logic;
+		clk : in std_logic;	--Needs a clock of <770KHz
+		S_C, S_D : out std_logic;
+		busy : out std_logic;
+	);
+end cam_ctr;
+
+
+architecture cam_ctr_arch of cam_ctr is
+	type state_type is ( IDLE, STARTBIT1, STARTBIT2, DATABIT, CUP, CDOWN, STOPBIT1, STOPBIT2);
+	signal current_state, next_state : state_type := IDLE;
+	
+	constant CAMERA_ID : std_logic_vector (7 downto 0) := X"42";
+	constant COM7_ADR : std_logic_vector (7 downto 0) := X"12";
+	constant COM15_ADR : std_logic_vector (7 downto 0) := X"40";
+	constant COM7_RESET_CMD : std_logic_vector (7 downto 0) := X"80";
+	constant COM7_RGB_CMD : std_logic_vector (7 downto 0) := X"04";
+	constant COM15_RGB555_CMD : std_logic_vector (7 downto 0) := X"F0";
+begin
+
+	next_state_logic: process (current_state) is
+	begin
+		next_state <= current_state;
+		case (current_state) is
+			when IDLE =>
+				if (cmds_left > 0) then
+					next_state <= STARTBIT1;	--takodje -1 na cmds left tu
+				end if;
+			when STARTBIT1 =>
+				next_state <= STARTBIT2;
+			when STARTBIT2 =>
+				next_state <= DATABIT;
+			when DATABIT =>
+				next_state <= CUP;
+			when CUP =>
+				next_state <= CDOWN;
+			when CDOWN =>
+				if (bits_left > 0) then
+					next_state <= DATABIT;
+				else
+					next_state <= STOPBIT1;
+				end if;
+			when STOPBIT1 =>
+					next_state <= STOPBIT2;
+			when STOPBIT2 =>
+					next_state <= IDLE;
+		end case;
+	end process;
+	
+	state_transition: process (Pclk, reset) is
+	begin
+		x_buf <= x_buf;
+		y_buf <= y_buf;
+		R_buf <= R_buf;
+		G_buf <= G_buf;
+		B_buf <= B_buf;
+		if (reset = '1') then
+			current_state <= WAIT_FRAME;
+			x_buf <= 0;
+			y_buf <= 0;
+			R_buf <= "00000";
+			G_buf <= "00000";
+			B_buf <= "00000";
+		elsif (rising_edge(Pclk)) then
+			data_delayed <= data;
+			current_state <= next_state;
+			case (current_state) is
+				when WAIT_FRAME =>
+					x_buf <= 0;
+					y_buf <= 0;
+				when WAIT_ROW=> 
+					x_buf <= 0;
+				when READ_1 =>
+					R_buf <= data_delayed(6 downto 2);
+					B_buf <= data(4 downto 0);
+					G_buf <= data_delayed(1 downto 0) & data(7 downto 5);
+				when READ_2 =>
+					if (next_state = WAIT_ROW) then
+						y_buf <= y_buf + 1;
+					else
+						x_buf <= x_buf + 1;
+					end if;
+			end case;
+		end if;
+	end process;
+	
+	clk_out <= not Pclk;
+	
+	output_logic: process (current_state) is
+	begin
+		if (current_state = READ_2) then
+			valid <= '1';
+		else
+			valid <= '0';
+		end if;
+	end process;
+	
+
+
+
+end cam_ctr_arch;

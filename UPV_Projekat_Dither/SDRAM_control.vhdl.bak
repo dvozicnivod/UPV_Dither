@@ -1,0 +1,117 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+--When given a new address on read or write it will read/ write the date on the data line
+--into memory and output a 1 on the complete line
+--must give it at least 1% of unused time for refreshing, continuous use no more than 60ms
+--read has priority over write
+--after reset cannot read max address initially. lol, doesn't need to be perfect :)
+
+
+entity SDRAM_control is
+	port
+	(
+		reset : in	std_logic;
+		clk	: in	std_logic;
+		a_write, a_read : in std_logic_vector(21 downto 0); --nisam tacno siguran, 22 za 4M x 16 valjda :D
+		d_write	:	in std_logic_vector(15 downto 0);
+		d_read	:	out std_logic_vector(15 downto 0);
+		w_complete, r_complete	: out std_logic;
+	);
+end SDRAM_control;
+
+
+architecture SDRAM_control_arch of SDRAM_control is
+	type state_type is ( IDLE, READ_CYCLE, WRITE_CYCLE, REFRESH_CYCLE );
+	
+	signal state_cnt : integer range 0 to 6 := 0;
+	signal current_state, next_state : state_type := IDLE;
+	signal p_a_read, p_a_write : std_logic_vector(21 downto 0);
+	signal read_req, write_req : std_logic;
+begin
+
+RW_request:
+	process (a_write,a_read,p_a_write,p_a_read) is
+	begin
+		if NOT (a_read = a_p_read) then
+			write_req <= '1';
+		else 
+			write_req <= '0';
+		end if;
+		if NOT(a_write = a_p_write) then
+			write_req <= '1';
+		else
+			write_req <= '0';
+		end if;
+	end;
+
+next_state_logic:
+	process (current_state, write_req, read_req) is
+	begin
+		case (current_state) of
+			when IDLE =>
+				if (read_cycle = '1') then
+					next_state <= READ_CYCLE;
+				elsif (write_cycle = '1') then
+					next_state <= WRITE_CYCLE;
+				else
+					next_state <= REFRESH_CYCLE;
+				end;
+			when OTHERS =>
+				if (state_cnt = 6) then
+					next_state <= IDLE;
+				else
+					next_state <= current_state;
+				end;
+		end case;
+	end;
+	
+state_transition:
+	process (reset, clk) is
+	begin
+		if (reset = '1') then
+			current_state <= IDLE;
+			p_a_read <= (others => '0');
+			p_a_write <= (others => '1');
+		elsif (rising_edge(clk)) then
+			current_state <= next_state;
+			if (next_state = IDLE) then
+				state_cnt <= 0;
+			else 
+				state_cnt <= state_cnt + 1;
+			end if;
+			case (current_state) is
+				when READ_CYCLE =>
+					if (state_cnt = 6) then 		--moze i 5, nije kriticno toliko
+						p_a_read <= a_read;
+					end if;
+				when WRITE_CYCLE =>					--ovde moze cak i 3
+					if (state_cnt = 6) then 
+						p_a_write <= a_write;
+					end if;
+				when OTHERS =>
+			end case;
+		end if;
+	end;
+			
+			
+	
+	
+	
+	
+	
+	
+			
+		
+
+
+
+
+
+
+
+
+
+
+end SDRAM_control_arch;

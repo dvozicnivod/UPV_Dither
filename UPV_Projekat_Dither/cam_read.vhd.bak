@@ -1,0 +1,39 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity cam_read is
+
+	port
+	(
+		PClk, Href, Hsync, Vsync	: in  std_logic;
+		R,G,B	: out std_logic_vector (4 downto 0);
+		Clk_out, 	: out std_logic
+	);
+end cam_read;
+
+
+-- Library Clause(s) (optional)
+-- Use Clause(s) (optional)
+
+architecture cam_read_arch of cam_read is
+
+	-- Declarations (optional)
+	type state_type is { WAIT_FRAME, WAIT_ROW, READ_1, READ_2}
+		signal State
+begin
+
+	-- Process Statement (optional)
+
+	-- Concurrent Procedure Call (optional)
+
+	-- Concurrent Signal Assignment (optional)
+
+	-- Conditional Signal Assignment (optional)
+
+	-- Selected Signal Assignment (optional)
+
+	-- Component Instantiation Statement (optional)
+
+	-- Generate Statement (optional)
+
+end <arch_name>;

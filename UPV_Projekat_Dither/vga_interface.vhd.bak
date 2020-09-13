@@ -1,0 +1,42 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+entity vga_interface is
+	generic (
+		H_DISPLAY: integer := 1024;	-- visible pixels
+		V_DISPLAY: integer := 768		-- visible pixels
+		CAM_WIDTH : integer := 640;
+		CAM_HEIGHT : integer := 480;
+		H_OFFSET : integer := (H_DISPLAY - CAM_WIDTH) /2;
+		V_OFFSET : integer := (V_DISPLAY - CAM_HEIGHT) /2
+	);
+	port
+	(
+		clk : in std_logic;
+		reset : in std_logic;
+		hpos : in integer range 0 to H_DISPLAY-1;
+		vpos : in integer range 0 to V_DISPLAY-1;
+		din : in std_logic_vector(2 downto 0);
+		dout : out std_logic_vector(2 downto 0);
+		adr_out : out std_logic_vector(18 downto 0)
+ 	);
+end vga_interface;
+
+architecture vga_interface_arch of vga_interface is
+signal valid_area : std_logic := 0; 
+	signal count : integer range 0 to 307200 := 0; 
+begin
+	valid_area <= '0' when (hpos < H_OFFSET or hpos>= H_OFFSET+CAM_WIDTH or vpos < V_OFFSET or vpos>= V_OFFSET+CAM_HEIGHT) else '1';
+	dout <= din when (valid_area = '1') else (others =>'0');
+clocked_process:
+	process (reset, clk) is
+	begin
+		if (reset = '1') then
+			count <= 0;
+		elsif (falling_edge(clk) then 
+			if valid_area
+			count <= count + 1;
+		end if;
+	end process;
+end vga_interface_arch;
