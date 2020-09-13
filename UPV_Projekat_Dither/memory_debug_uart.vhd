@@ -11,8 +11,8 @@ entity memory_debug_uart is
 		reset 	: in std_logic;
 		
 		a_write, a_read : out std_logic_vector(21 downto 0);
-		d_write			: out std_logic_vector(15 downto 0);
-		d_read			: in std_logic_vector(15 downto 0) := (others => '1');
+		d_write			: out std_logic_vector(31 downto 0);
+		d_read			: in std_logic_vector(31 downto 0) := (others => '1');
 		btn				: in std_logic;
 		w_complete		: in std_logic;
 		r_complete		: in std_logic;
@@ -47,7 +47,7 @@ next_state_logic:
 				next_state <= WAIT_WR;
 			when WAIT_WR =>
 				if (w_complete = '1') then
-					if (to_integer(unsigned(addr_out)) = Atot) then
+					if (to_integer(unsigned(addr_out)) >= Atot) then
 						next_state <= RD_RQ;
 			        else
 						next_state <= WR_REQ;
@@ -73,7 +73,7 @@ next_state_logic:
 				if (uart_busy = '1') then
 					next_state <= WAIT_UART;
 				else
-					if (to_integer(unsigned(addr_rd)) = Atot) then
+					if (to_integer(unsigned(addr_rd)) >= Atot) then
 						next_state <= WAIT_BTN;
 					else
 						next_state <= RD_RQ;
@@ -93,10 +93,10 @@ state_transition:
 		elsif (rising_edge(clk)) then
 			current_state <= next_state;
 			if (next_state = WR_REQ) then
-				addr_out <= std_logic_vector(unsigned(addr_out) + 1);
+				addr_out <= std_logic_vector(unsigned(addr_out) + 2);			--Increment 2 for burst 2 test
 			end if;	
 			if (next_state = RD_RQ) then
-				addr_rd <= std_logic_vector(unsigned(addr_rd) + 1);
+				addr_rd <= std_logic_vector(unsigned(addr_rd) + 2);
 			end if;
 			if (next_state = WAIT_BTN) then
 				addr_rd <= (others => '1');
@@ -106,7 +106,7 @@ state_transition:
 	end process;
 	a_write <= addr_out;
 	a_read	<= addr_rd;
-	d_write <= addr_out(15 downto 0); --Very much todo
+	d_write <= ((addr_out(15 downto 0)) & (not addr_out(15 downto 0))); --Very much todo
 	uart_data <= d_read(15 downto 8);
 output_logic:
 	process (current_state) is
