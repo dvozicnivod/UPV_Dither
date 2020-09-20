@@ -11,8 +11,8 @@ entity memory_debug_uart is
 		reset 	: in std_logic;
 		
 		a_write, a_read : out std_logic_vector(21 downto 0);
-		d_write			: out std_logic_vector(15 downto 0);
-		d_read			: in std_logic_vector(15 downto 0) := (others => '1');
+		d_write			: out std_logic_vector(31 downto 0);
+		d_read			: in std_logic_vector(31 downto 0) := (others => '1');
 		btn				: in std_logic;
 		w_complete		: in std_logic;
 		r_complete		: in std_logic;
@@ -106,7 +106,7 @@ state_transition:
 	end process;
 	a_write <= addr_out;
 	a_read	<= addr_rd;
-	d_write <= addr_out(15 downto 0); --Very much todo
+	d_write <= ((not addr_out(15 downto 0)) & addr_out(15 downto 0)); --Very much todo
 	uart_data <= d_read(15 downto 8);
 output_logic:
 	process (current_state) is

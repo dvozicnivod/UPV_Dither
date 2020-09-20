@@ -117,15 +117,15 @@ component memory_debug_uart is
 		reset 	: in std_logic;
 		
 		a_write, a_read : out std_logic_vector(21 downto 0);
-		d_write			: out std_logic_vector(15 downto 0);
-		d_read			: in std_logic_vector(15 downto 0);
+		d_write			: out std_logic_vector(31 downto 0);
+		d_read			: in std_logic_vector(31 downto 0) := (others => '1');
 		btn				: in std_logic;
 		w_complete		: in std_logic;
 		r_complete		: in std_logic;
 		
 		uart_data		: out std_logic_vector(7 downto 0);
 		uart_req			: out std_logic := '0';
-		waiting :out std_logic;
+		waiting : out std_logic;
 		uart_busy 		: in std_logic
 	);
 end component;
@@ -204,13 +204,15 @@ component SDRAM_control is
 	(
 		reset 	: in	std_logic;
 		clk		: in	std_logic;
-		a_write, a_read : in std_logic_vector(21 downto 0); --nisam tacno siguran, 22 za 4M x 16 valjda :D
-		d_write	:	in std_logic_vector(15 downto 0);
-		d_read	:	out std_logic_vector(15 downto 0) := (others => '1');
+		--Control signals
+		a_write, a_read : in std_logic_vector(21 downto 0);
+		d_write	:	in std_logic_vector(31 downto 0);
+		d_read	:	out std_logic_vector(31 downto 0) := (others => '1');
+		--Status signals
 		w_complete	: out std_logic;
 		r_complete	: out std_logic;
 		--Interface with SDRAM
-		a_sdram 	: 	out std_logic_vector(13 downto 0);	--gornja 2 bita bank select
+		a_sdram 	: 	out std_logic_vector(13 downto 0);	--top 2 bits bank select
 		dq_sdram : 	inout std_logic_vector(15 downto 0);
 		cs_n		:	out std_logic;
 		ras_n		:	out std_logic;
@@ -307,9 +309,9 @@ signal write_adr : std_logic_vector(18 downto 0);	--adr
 	--write_interface
 signal finished_frame : std_logic_vector(1 downto 0);	--finished_frame
 signal s_ctr_wr_adr : std_logic_vector(21 downto 0);	--address_out
-signal s_ctr_wr_data : std_logic_vector(15 downto 0);	--data_out
+signal s_ctr_wr_data : std_logic_vector(31 downto 0);	--data_out
 	--SDRAM_control
-signal s_ctr_rd_data : std_logic_vector(15 downto 0);	--d_read
+signal s_ctr_rd_data : std_logic_vector(31 downto 0);	--d_read
 	--read_interface
 signal RGB_dither_read : std_logic_vector(2 downto 0);	--dout
 signal s_ctr_rd_adr : std_logic_vector(21 downto 0);	--address_out

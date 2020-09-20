@@ -22,8 +22,8 @@ entity SDRAM_control is
 		clk		: in	std_logic;
 		--Control signals
 		a_write, a_read : in std_logic_vector(21 downto 0);
-		d_write	:	in std_logic_vector(15 downto 0);
-		d_read	:	out std_logic_vector(15 downto 0) := (others => '1');
+		d_write	:	in std_logic_vector(31 downto 0);
+		d_read	:	out std_logic_vector(31 downto 0) := (others => '1');
 		--Status signals
 		w_complete	: out std_logic;
 		r_complete	: out std_logic;
@@ -44,7 +44,7 @@ architecture SDRAM_control_arch of SDRAM_control is
 	
 	type state_type is ( IDLE, INIT, READ_CYCLE, WRITE_CYCLE, REFRESH_CYCLE );
 	
-	signal state_cnt : integer range 0 to 7 := 0;
+	signal state_cnt : integer range 0 to 8 := 0;
 	signal init_cnt : integer range 0 to INIT_CYCLES := 0;
 	signal current_state, next_state : state_type := INIT;
 	signal p_a_read, p_a_write : std_logic_vector(21 downto 0) := (others => '0');
@@ -78,7 +78,7 @@ next_state_logic:
 					next_state <= REFRESH_CYCLE;
 				end if;
 			when OTHERS =>
-				if (state_cnt = 7) then
+				if (state_cnt = 8) then
 					next_state <= IDLE;
 				else
 					next_state <= current_state;
@@ -111,11 +111,11 @@ state_transition:
 			end if;
 			case (current_state) is
 				when READ_CYCLE =>
-					if (state_cnt = 7) then
+					if (state_cnt = 8) then
 						p_a_read <= a_read;
 					end if;
 				when WRITE_CYCLE =>
-					if (state_cnt = 7) then 
+					if (state_cnt = 8) then 
 						p_a_write <= a_write;
 					end if;
 				when OTHERS =>
@@ -131,8 +131,8 @@ latch_process:
 			if (current_state = READ_CYCLE) then
 				if (state_cnt = 6) then			--bilo 6 TODO
 					d_read(15 downto 0) <= dq_sdram;
---				elsif (state_cnt = 6) then
---					d_read(31 downto 16) <= dq_sdram;
+				elsif (state_cnt = 7) then
+					d_read(31 downto 16) <= dq_sdram;
 				end if;
 			end if;
 		end if;
@@ -164,13 +164,13 @@ output_logic:
 						cas_n <= '0';
 						ras_n <= '0';
 					when SETUP_CYCLES+2+8*8 -1 => 
-						a_sdram(9 downto 0) <= "1000100000"; --burst 1, cas 2, serial read, burst 1  for security one before TODO
+						a_sdram(9 downto 0) <= "0000100001"; --burst from low bits, cas 2, serial read, burst 2  for security one before TODO
 					when SETUP_CYCLES+2+8*8 => 
 						cs_n <= '0';
 						cas_n <= '0';
 						ras_n <= '0';
 						we_n <= '0';
-						a_sdram(9 downto 0) <= "1000100000"; --burst 1, cas 2, serial read, burst 1
+						a_sdram(9 downto 0) <= "0000100001"; --burst from low bits, cas 2, serial read, burst 2
 					when others =>
 				end case;
 			when IDLE =>
@@ -193,9 +193,9 @@ output_logic:
 						a_sdram(10) <= '1';	--znaci odradi PC
 						dqmh <= '0';
 						dqml <= '0';
---					when 4 =>
---						dqmh <= '0';
---						dqml <= '0';
+					when 4 =>
+						dqmh <= '0';
+						dqml <= '0';
 					when others =>
 				end case;
 			when WRITE_CYCLE =>
@@ -210,7 +210,6 @@ output_logic:
 						a_sdram(7 downto 0) <= a_write(7 downto 0);
 						a_sdram(13 downto 12) <= a_write(21 downto 20); --ovo je bank
 						a_sdram(10) <= '1';	--znaci da odradi PC
-						dq_sdram <= d_write(15 downto 0);
 					when 3 =>
 						--write collumn +PC command
 						cs_n <= '0';
@@ -222,10 +221,10 @@ output_logic:
 						dqmh <= '0';
 						dqml <= '0';
 						dq_sdram <= d_write(15 downto 0);
---					when 4 =>
---						dqmh <= '0';
---						dqml <= '0';
---						dq_sdram <= d_write(31 downto 16);
+					when 4 =>
+						dqmh <= '0';
+						dqml <= '0';
+						dq_sdram <= d_write(31 downto 16);
 					when others =>
 				end case;
 			when REFRESH_CYCLE =>
@@ -233,6 +232,8 @@ output_logic:
 					cs_n <= '0';
 					cas_n <= '0';
 					ras_n <= '0';
+					dqmh <= '0';
+					dqml <= '0';
 				end if;
 		end case;
 		cs_n <= '0';		--GIANT TODO this invalidates a lot of stuff, but seems to work better?
