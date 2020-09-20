@@ -387,13 +387,14 @@ begin
 		--Uart inst TODO done
 	
 	
-	
+
+c_sdram_int <= clk_50;	
 
 pll_inst:  pll
 	port map (  
 		inclk0	=> clk_50,
 		c0 => c_vga, 
-		c1	=> c_sdram_int,
+		c1	=> OPEN, --Testing SDRAM with 50 MHZ
 		c2 => c_cam ,
 		c3 => c_sccb
 	);
