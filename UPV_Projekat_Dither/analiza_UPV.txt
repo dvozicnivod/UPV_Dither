@@ -1,0 +1,63 @@
+Camera 	12MPix/s
+VGA 	65MPix/s
+	77MPix/s min reqd
+
+100MHz (burst 1)
+-> 8 cycle per operation
+-> 2 BYTE per op
+100/8*2 => 25MB/s (2pix/B) => 50MPix/s
+
+100MHz (burst 2)
+-> 10 cycle per operation
+-> 4 BYTE per op
+100/10*4 => 40MB/s (2pix/B) => 80Mpix/s
+
+50MHz
+-> 8 cycle per op
+-> 4 BYTE per op
+50/8*4 => 25MB/s (2pix/B) => 50MPix/s
+
+50MHZ (burst 2)
+-> 10 cycle per op
+-> 8 BYTE per op
+50/10*8 => 40MB/s (2pix/B) => 80MPix/s
+
+50MHZ (burst 4)
+-> 14 cycle per op
+-> 16 BYTE per op
+50/14*16 => 57MB/s (2pix/B) => 114MPix/s
+
+50MHZ (burst 8)
+-> 18 cycles per op
+-> 32 BYTE per op
+50/18*32 => 88MB/s (2pix/B) => 177MPix/s
+
+
+
+ras nop nop cas nop rd0 rd1 rd2 rd3
+burst 4 donja 2 ili 4 bita budu 0 uvek
+
+
+
+12MHz
+-> treba da spustimo gresku (4bita)
+-> treba da ucitamo gresku (4bita)
+6MB/s upis +
+6MB/s citanje
+12MB/s => 24MPix/s *3(rgb)
+
+	  72MPix/s
+	+ 77MPix/s
+	 149MPix/s!
+
+
+full greska ne, cuvamo samo 2 bita greske
+
+
+
+
+red_gresaka[----------------------------------------]
+buf_greska [xxxx][PPPP][pppp][xxxx][xxxx][xxxx][xxxx]
+
+
+

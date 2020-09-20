@@ -129,12 +129,22 @@ latch_process:
 	begin
 		if (rising_edge(clk)) then		--bilo_falling TODO
 			if (current_state = READ_CYCLE) then
-				if (state_cnt = 6) then			--bilo 6 TODO
+				if (state_cnt = 7) then			--bilo 6 TODO
 					d_read(15 downto 0) <= dq_sdram;
-				elsif (state_cnt = 7) then
+				elsif (state_cnt = 8) then
 					d_read(31 downto 16) <= dq_sdram;
 				end if;
 			end if;
+			if (current_state = WRITE_CYCLE) then
+				if (state_cnt = 4) then			--bilo 6 TODO
+					dq_sdram <= d_write(15 downto 0);
+				elsif (state_cnt = 5) then
+					dq_sdram <= d_write(31 downto 16);
+				else
+					dq_sdram <= (others => 'Z');
+				end if;
+			end if;
+					
 		end if;
 	end process;
 	
@@ -146,7 +156,6 @@ output_logic:
 		cs_n <= '1';
 		ras_n <= '1';
 		cas_n <= '1';
-		dq_sdram <= (others => 'Z');
 		dqmh <= '1';
 		dqml <= '1';
 		a_sdram <= (others => '1');
@@ -164,13 +173,13 @@ output_logic:
 						cas_n <= '0';
 						ras_n <= '0';
 					when SETUP_CYCLES+2+8*8 -1 => 
-						a_sdram(9 downto 0) <= "0000100001"; --burst from low bits, cas 2, serial read, burst 2  for security one before TODO
+						a_sdram(12 downto 0) <= "0000000100001"; --burst from low bits, cas 2, serial read, burst 2  for security one before TODO
 					when SETUP_CYCLES+2+8*8 => 
 						cs_n <= '0';
 						cas_n <= '0';
 						ras_n <= '0';
 						we_n <= '0';
-						a_sdram(9 downto 0) <= "0000100001"; --burst from low bits, cas 2, serial read, burst 2
+						a_sdram(12 downto 0) <= "0000000100001"; --burst from low bits, cas 2, serial read, burst 2
 					when others =>
 				end case;
 			when IDLE =>
@@ -220,11 +229,12 @@ output_logic:
 						we_n <= '0';
 						dqmh <= '0';
 						dqml <= '0';
-						dq_sdram <= d_write(15 downto 0);
 					when 4 =>
 						dqmh <= '0';
 						dqml <= '0';
-						dq_sdram <= d_write(31 downto 16);
+					when 5 =>
+						dqmh <= '0';
+						dqml <= '0';
 					when others =>
 				end case;
 			when REFRESH_CYCLE =>

@@ -6,7 +6,7 @@ entity UPV_Projekat_Dither is
 
 	port
 	(
-		button : in std_logic;
+		button	: in std_logic_vector(3 downto 0);
 		test1: out std_logic;		--TODO   test1 used as TX for MSP UART pin 127
 		test2: out std_logic;	--TODO EXTREME , smer bio IN dok se citao btn za uart, sada 125
 		--TODO   test2 used as BUTTON for test pin 88, used to be   125
@@ -119,7 +119,7 @@ component memory_debug_uart is
 		a_write, a_read : out std_logic_vector(21 downto 0);
 		d_write			: out std_logic_vector(31 downto 0);
 		d_read			: in std_logic_vector(31 downto 0) := (others => '1');
-		btn				: in std_logic;
+		btn				: in std_logic_vector(3 downto 0);
 		w_complete		: in std_logic;
 		r_complete		: in std_logic;
 		
