@@ -41,8 +41,8 @@ SIGNAL cas_n : STD_LOGIC;
 SIGNAL clk : STD_LOGIC := '0';
 SIGNAL clk_en : STD_LOGIC;
 SIGNAL cs_n : STD_LOGIC;
-SIGNAL d_read : STD_LOGIC_VECTOR(15 DOWNTO 0);
-SIGNAL d_write : STD_LOGIC_VECTOR(15 DOWNTO 0);
+SIGNAL d_read : STD_LOGIC_VECTOR(31 DOWNTO 0);
+SIGNAL d_write : STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL dq_sdram : STD_LOGIC_VECTOR(15 DOWNTO 0) := (others => 'Z');
 SIGNAL dqmh : STD_LOGIC;
 SIGNAL dqml : STD_LOGIC;
@@ -52,6 +52,9 @@ SIGNAL reset : STD_LOGIC;
 SIGNAL w_complete : STD_LOGIC;
 SIGNAL we_n : STD_LOGIC;
 COMPONENT SDRAM_control
+	GENERIC(
+		SETUP_CYCLES:integer := 3	--How many cycles to wait before starting initialization
+	);
 	PORT (
 	a_read : IN STD_LOGIC_VECTOR(21 DOWNTO 0);
 	a_sdram : OUT STD_LOGIC_VECTOR(13 DOWNTO 0);
@@ -60,8 +63,8 @@ COMPONENT SDRAM_control
 	clk : IN STD_LOGIC;
 	clk_en : OUT STD_LOGIC;
 	cs_n : OUT STD_LOGIC;
-	d_read : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-	d_write : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+	d_read : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+	d_write : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 	dq_sdram : INOUT STD_LOGIC_VECTOR(15 DOWNTO 0);
 	dqmh : OUT STD_LOGIC;
 	dqml : OUT STD_LOGIC;
@@ -74,6 +77,9 @@ COMPONENT SDRAM_control
 END COMPONENT;
 BEGIN
 	i1 : SDRAM_control
+	GENERIC MAP(
+		3
+	)
 	PORT MAP (
 -- list connections between master ports and signals
 	a_read => a_read,
@@ -95,7 +101,7 @@ BEGIN
 	we_n => we_n
 	);
 	a_write <= "1100110011001100111100";
-	d_write <= "0101010101010101";
+	d_write <= "01010101010101010101010101010101";
 	a_read <= "1100110011001100111100";
 	
 	clk <= not clk after 5 ps;
