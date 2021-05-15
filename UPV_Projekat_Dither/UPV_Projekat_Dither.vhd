@@ -143,7 +143,7 @@ component pll is
 end component;
 
 
-component SDRAM_control is
+component SDRAM_control_synced is
 	port
 	(
 		reset 	: in	std_logic;
@@ -273,13 +273,12 @@ begin
 	
 	
 
-c_sdram_int <= clk_50;	
 
 pll_inst:  pll
 	port map (  
 		inclk0	=> clk_50,
 		c0 => OPEN, --VGA clk 
-		c1	=> OPEN, --Testing SDRAM with 50 MHZ
+		c1	=> c_sdram_int, --Testing SDRAM with 50 MHZ
 		c2 => OPEN , --CAM clk
 		c3 => c_sccb --CAM sccb clk
 	);
@@ -332,7 +331,7 @@ mem_deb_inst: memory_debug_uart
 	
 	
 	
-SDRAM_control_inst:  SDRAM_control
+SDRAM_control_inst:  SDRAM_control_synced
 	port map (  
 		reset 	=> reset,
 		clk	=> c_sdram_int,
