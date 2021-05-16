@@ -52,6 +52,7 @@ architecture SDRAM_control_arch of SDRAM_control_synced is
 	signal p_a_read, p_a_write : std_logic_vector(21 downto 0) := (others => '0');
 	signal a_sdram_l :std_logic_vector(13 downto 0) := (others => '1');
 	signal read_req, write_req, read_req_l, write_req_l, done, cs_n_l, ras_n_l, cas_n_l, dqmh_l, dqml_l, we_n_l: std_logic;
+	signal d_sdram_l, q_sdram_l :std_logic_vector(15 downto 0);
 begin
 
 	clk_en <= '1';
@@ -126,34 +127,39 @@ state_transition:
 	end process;
 	
 	
-latch_process:
-	process (clk) is
-	begin
-		if (rising_edge(clk)) then		--bilo_falling TODO
-			if (current_state = READ_CYCLE) then
-				if (state_cnt = 7) then			--bilo 6 TODO
-					d_read(15 downto 0) <= dq_sdram;
-				elsif (state_cnt = 8) then
-					d_read(31 downto 16) <= dq_sdram;
-				end if;
-			end if;
-			if (current_state = WRITE_CYCLE) then
-				if (state_cnt = 4) then			--bilo 6 TODO
-					dq_sdram <= d_write(15 downto 0);
-				elsif (state_cnt = 5) then
-					dq_sdram <= d_write(31 downto 16);
-				else
-					dq_sdram <= (others => 'Z');
-				end if;
-			end if;
-					
+--read_latch_process:
+
+
+--There is a parameter of minimum hold time for data out of 2.5ns, so we should probably sample on the rising edge
+Q_latch_process:
+	process(reset, clk) is 
+	begin 
+		if(reset = '1') then
+			q_sdram_l <= (others => '1');
+		elsif(rising_edge(clk)) then
+			q_sdram_l <=  dq_sdram;
 		end if;
-	end process;
+	end process; 
+
+
+--read_latch_process:
+--	process (clk) is
+--	begin
+--		if (rising_edge(clk)) then		--bilo_falling TODO
+--			if (current_state = READ_CYCLE) then
+--				if (state_cnt = 7) then			--bilo 6 TODO
+--					d_read(15 downto 0) <= dq_sdram;
+--				elsif (state_cnt = 8) then
+--					d_read(31 downto 16) <= dq_sdram;
+--				end if;
+--			end if;
+--		end if;
+--	end process;
 	
 	
-	
+--Made according to current state and then latched to output on falling edge of same state!
 output_logic:
-	process(next_state, next_state_cnt, init_cnt, a_read, a_write, d_write) is
+	process(current_state, state_cnt, init_cnt, a_read, a_write, d_write) is
 	begin
 		cs_n_l <= '1';
 		ras_n_l <= '1';
@@ -162,9 +168,10 @@ output_logic:
 		dqml_l <= '1';
 		a_sdram_l <= (others => '1');
 		we_n_l <= '1';
-		case (next_state) is
+		d_sdram_l <= (others => 'Z');
+		case (current_state) is
 			when INIT =>
-				case (next_init_cnt) is
+				case (init_cnt) is
 					when SETUP_CYCLES =>
 						cs_n_l <= '0';
 						ras_n_l <= '0';
@@ -186,15 +193,13 @@ output_logic:
 				end case;
 			when IDLE =>
 			when READ_CYCLE =>
-				case (next_state_cnt) is
+				case (state_cnt) is
 					when 1 =>
 						--activate row command
 						cs_n_l <= '0';
 						ras_n_l <= '0';
+						we_n_l <= '1';
 						a_sdram_l <= a_read(21 downto 8);
-					when 2 =>		--Dodato radi robustnosti TODO
-						a_sdram_l(7 downto 0) <= a_read(7 downto 0);
-						a_sdram_l(13 downto 12) <= a_read(21 downto 20); --ovo je bank
 					when 3 =>
 						--read collumn +PC command
 						cs_n_l <= '0';
@@ -205,52 +210,47 @@ output_logic:
 						dqmh_l <= '0';
 						dqml_l <= '0';
 					when 4 =>
-						dqmh_l <= '0';
+						dqmh_l <= '0';	--Treba jos jedan da bi se odradio burst!
 						dqml_l <= '0';
 					when others =>
 				end case;
 			when WRITE_CYCLE =>
-				case (next_state_cnt) is
+				case (state_cnt) is
 					when 1 =>
 						--activate row command
 						cs_n_l <= '0';
 						ras_n_l <= '0';
-						a_sdram_l <= a_write(21 downto 8);
 						we_n_l <= '1';	
-					when 2 =>		--Dodato radi robustnosti TODO
-						a_sdram_l(7 downto 0) <= a_write(7 downto 0);
-						a_sdram_l(13 downto 12) <= a_write(21 downto 20); --ovo je bank
-						a_sdram_l(10) <= '1';	--znaci da odradi PC
+						a_sdram_l <= a_write(21 downto 8);
 					when 3 =>
 						--write collumn +PC command
 						cs_n_l <= '0';
 						cas_n_l <= '0';    
+						we_n_l <= '0';
 						a_sdram_l(7 downto 0) <= a_write(7 downto 0);
 						a_sdram_l(13 downto 12) <= a_write(21 downto 20); --ovo je bank
 						a_sdram_l(10) <= '1';	--znaci da odradi PC
-						we_n_l <= '0';
 						dqmh_l <= '0';
 						dqml_l <= '0';
+						d_sdram_l <= d_write(15 downto 0);
 					when 4 =>
 						dqmh_l <= '0';
 						dqml_l <= '0';
-					when 5 =>
-						dqmh_l <= '0';
-						dqml_l <= '0';
+						d_sdram_l <= d_write(31 downto 16);
 					when others =>
 				end case;
 			when REFRESH_CYCLE =>
-				if (next_state_cnt = 1) then
+				if (state_cnt = 1) then
 					cs_n_l <= '0';
 					cas_n_l <= '0';
 					ras_n_l <= '0';
-					dqmh_l <= '0';
-					dqml_l <= '0';
+					we_n_l <= '1';
 				end if;
 		end case;
-		cs_n_l <= '0';		--GIANT TODO this invalidates a lot of stuff, but seems to work better?
-		dqml_l <= '0';
-		dqmh_l <= '0';
+		--These can just always be on since it's only one IC
+		--cs_n_l <= '0';
+		--dqml_l <= '0';
+		--dqmh_l <= '0';
 	end process;
 	
 output_latch_process:
@@ -264,16 +264,36 @@ output_latch_process:
 			dqml <= '1';
 			a_sdram <= (others => '1');
 			we_n <= '1';
+			dq_sdram <= (others => 'Z');
 		elsif (falling_edge(clk)) then
-			cs_n 	<=cs_n_l;
-			ras_n 	<=ras_n_l;
-			cas_n 	<=cas_n_l;
-			dqmh 	<=dqmh_l;
-			dqml 	<=dqml_l;
-			a_sdram <=a_sdram_l;
-			we_n 	<=we_n_l;	
+			cs_n 	<= cs_n_l;
+			ras_n <= ras_n_l;
+			cas_n <= cas_n_l;
+			dqmh <= dqmh_l;
+			dqml <= dqml_l;
+			a_sdram <= a_sdram_l;
+			we_n 	<= we_n_l;	
+			dq_sdram <= d_sdram_l;
 		end if;
-			
 	end process;
+	
+input_latch_process:
+	process (reset, clk)
+	begin
+		if (reset = '1') then
+			d_read <= (others => '0');
+		elsif (falling_edge(clk)) then
+			if (current_state = READ_CYCLE) then
+				case (state_cnt) is
+					when 6 =>
+						d_read(15 downto 0) <= dq_sdram;
+					when 7 =>
+						d_read(31 downto 16) <= dq_sdram;
+					when others =>
+				end case;
+			end if;
+		end if;
+	end process;
+	
 	
 end SDRAM_control_arch;
