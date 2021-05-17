@@ -286,9 +286,9 @@ input_latch_process:
 			if (current_state = READ_CYCLE) then
 				case (state_cnt) is
 					when 6 =>
-						d_read(15 downto 0) <= dq_sdram;
+						d_read(15 downto 0) <= q_sdram_l;
 					when 7 =>
-						d_read(31 downto 16) <= dq_sdram;
+						d_read(31 downto 16) <= q_sdram_l;
 					when others =>
 				end case;
 			end if;

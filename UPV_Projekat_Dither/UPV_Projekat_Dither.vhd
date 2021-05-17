@@ -272,7 +272,7 @@ begin
 		--Uart inst TODO done
 	
 	
-
+--c_sdram_int <= clk_50;
 
 pll_inst:  pll
 	port map (  
