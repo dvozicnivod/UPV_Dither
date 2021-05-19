@@ -42,7 +42,7 @@ use ieee.numeric_std.all;
 entity dither_engine is
 	generic
 	(
-		CAM_WIDTH : integer := 15
+		CAM_WIDTH : integer := 8
 	);
 	port 
 	(
@@ -101,7 +101,7 @@ error_memory_instance:
 	);
 
 	current_accumulated_value <= unsigned(rin) + B/4 + C/4 + E/2;
-	current_dithered <= '1' when (current_accumulated_value > THRESHOLD) else '0'; --Ili samo top bit!
+	current_dithered <= '1' when (current_accumulated_value >= THRESHOLD) else '0'; --Ili samo top bit!
 	current_error <= current_accumulated_value when (current_dithered = '0') else current_accumulated_value - THRESHOLD; --Ili samo skini top bit!
 	
 next_state_logic:
@@ -119,7 +119,7 @@ next_state_logic:
 		case current_state is
 			when WAIT_FRAME =>
 				next_i <= to_unsigned(0,10);
-				if (v_sync = '1') then
+				if (v_sync = '0') then
 					next_state <= WAIT_ROW;
 				else
 					next_state <= WAIT_FRAME;
@@ -176,7 +176,7 @@ next_state_logic:
 				next_state <= WAIT_ROW;
 				next_C <= unsigned('0' & mem_read_data(4 downto 0));
 			when CLEAR_MEM =>
-				if (i = 640) then
+				if (i = to_unsigned(CAM_WIDTH,10)) then
 					next_C <= unsigned('0' & mem_read_data(4 downto 0));			--Kad si vec ovde ocisti i C
 					next_state <= WAIT_FRAME;
 				else
