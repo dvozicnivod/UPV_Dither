@@ -35,7 +35,7 @@ ARCHITECTURE dither_engine_arch OF dither_engine_vhd_tst IS
 -- signals                                                   
 SIGNAL bin : STD_LOGIC_VECTOR(4 DOWNTO 0);
 SIGNAL clk : STD_LOGIC := '0';
-SIGNAL dither_out : STD_LOGIC;
+SIGNAL dither_out : std_logic_vector(2 downto 0);
 SIGNAL gin : STD_LOGIC_VECTOR(4 DOWNTO 0);
 SIGNAL h_ref : STD_LOGIC;
 SIGNAL reset : STD_LOGIC;
@@ -48,7 +48,7 @@ COMPONENT dither_engine
 	PORT (
 	bin : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
 	clk : IN STD_LOGIC;
-	dither_out : OUT STD_LOGIC;
+	dither_out : out std_logic_vector(2 downto 0);
 	gin : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
 	h_ref : IN STD_LOGIC;
 	reset : IN STD_LOGIC;
@@ -90,8 +90,8 @@ always : PROCESS
 -- variable declarations                                      
 BEGIN                                                         
 	rin <= "10000";                                           
-	gin <= "00000";                                           
-	bin <= "00000";
+	gin <= "01000";                                           
+	bin <= "11111";
 	h_ref <= '0';
 	reset <= '1';
 	v_sync <= '0';
