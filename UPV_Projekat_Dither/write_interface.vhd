@@ -6,7 +6,7 @@ entity write_interface is
 	generic
 	(
 		FRAME_WIDTH : integer := 640;
-		NUM_BYTES : integer := 2
+		NUM_BYTES : integer := 8
 	);
 	port
 	(
@@ -55,16 +55,14 @@ next_state_logic:
 					next_state <= WAIT_DATA;
 				end if;
 			when ACCUMULATE_DATA =>
-				if (valid = '1') then
-					if (data_cnt = NUM_BYTES * 2) then
-						next_data_out <= data_buffer;
-						next_address_out <= current_address;
-						next_state <= LATCH_OUT;
-					else
-						next_data_cnt <= data_cnt + 1;
-						next_state <= ACCUMULATE_DATA;
-						next_data_buffer((to_integer(data_cnt)*4+2) downto to_integer(data_cnt)*4) <= data_in;
-					end if;
+				if (data_cnt = NUM_BYTES * 2) then
+					next_data_out <= data_buffer;
+					next_address_out <= current_address;
+					next_state <= WAIT_DATA;
+				elsif (valid = '1') then
+					next_data_cnt <= data_cnt + 1;
+					next_state <= ACCUMULATE_DATA;
+					next_data_buffer((to_integer(data_cnt)*4+2) downto to_integer(data_cnt)*4) <= data_in;
 				else
 					next_state <= ACCUMULATE_DATA;
 				end if;
