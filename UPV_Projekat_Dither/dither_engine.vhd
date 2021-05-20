@@ -54,7 +54,8 @@ entity dither_engine is
 		rin, gin, bin	: in std_logic_vector(4 downto 0);
 		dither_out : out std_logic_vector(2 downto 0);
 		xpos_out : out std_logic_vector(9 downto 0); 
-		ypos_out : out std_logic_vector(8 downto 0)
+		ypos_out : out std_logic_vector(8 downto 0);
+		valid_out : out std_logic
 	);
 end dither_engine;
 
@@ -87,6 +88,7 @@ architecture dither_engine_arch of dither_engine is
 	signal mem_write_data, mem_read_data : std_logic_vector(15 downto 0);
 	signal mem_write_adr, mem_read_adr : std_logic_vector(9 downto 0);
 	signal mem_WE : std_logic;
+	signal tmp_valid, next_valid : std_logic;
 	
 begin
 
@@ -132,6 +134,7 @@ next_state_logic:
 		next_dither_out <= tmp_dither_out;
 		next_xpos_out <= tmp_xpos_out;
 		next_ypos_out <= tmp_ypos_out;
+		next_valid <= '0';  --Po defaultu se vraca na nulu !
 		case current_state is
 			when WAIT_FRAME =>
 				next_i <= to_unsigned(0,10);
@@ -187,6 +190,7 @@ next_state_logic:
 						next_dither_out <= current_dithered_b & current_dithered_g & current_dithered_r;
 						next_xpos_out <= i;
 						next_ypos_out <= j;
+						next_valid <= '1';
 						next_state <= WAIT_PIXEL;
 					else
 						next_state <= PROCESS_PIXEL;
@@ -263,6 +267,7 @@ state_transition:
 			tmp_dither_out <= "000";
 			tmp_xpos_out <= to_unsigned(0,10);
 			tmp_ypos_out <= to_unsigned(0,10);
+			tmp_valid <= '0';
 		elsif (rising_edge(clk)) then
 			current_state <= next_state;
 			i <= next_i;
@@ -279,11 +284,12 @@ state_transition:
 			tmp_dither_out <= next_dither_out;
 			tmp_xpos_out <= next_xpos_out;  
 			tmp_ypos_out <= next_ypos_out;  
+			tmp_valid <= next_valid;
 		end if;
 	end process;
 	dither_out <= tmp_dither_out;
 	xpos_out <= std_logic_vector(tmp_xpos_out);  
 	ypos_out <= std_logic_vector((tmp_ypos_out(8 downto 0)));  
-
+	valid_out <= tmp_valid;
 
 end dither_engine_arch;

@@ -44,6 +44,7 @@ SIGNAL v_sync : STD_LOGIC;
 SIGNAL valid : STD_LOGIC;
 SIGNAL xpos_out : STD_LOGIC_VECTOR(9 DOWNTO 0);
 SIGNAL ypos_out : STD_LOGIC_VECTOR(8 DOWNTO 0);
+SIGNAL valid_out : std_logic;
 COMPONENT dither_engine
 	PORT (
 	bin : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
@@ -56,7 +57,9 @@ COMPONENT dither_engine
 	v_sync : IN STD_LOGIC;
 	valid : IN STD_LOGIC;
 	xpos_out : OUT STD_LOGIC_VECTOR(9 DOWNTO 0);
-	ypos_out : OUT STD_LOGIC_VECTOR(8 DOWNTO 0)
+	ypos_out : OUT STD_LOGIC_VECTOR(8 DOWNTO 0);
+	valid_out : out std_logic
+	
 	);
 END COMPONENT;
 BEGIN
@@ -76,7 +79,8 @@ BEGIN
 	v_sync => v_sync,
 	valid => valid,
 	xpos_out => xpos_out,
-	ypos_out => ypos_out
+	ypos_out => ypos_out,
+	valid_out => valid_out
 	);
 init : PROCESS                                               
 -- variable declarations                                     
