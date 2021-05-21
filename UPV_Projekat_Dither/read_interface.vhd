@@ -1,103 +1,141 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use IEEE.math_real.all;
 
 entity read_interface is
-
+	generic
+	(
+		FRAME_WIDTH : integer := 640;
+		NUM_BYTES : integer := 2;
+		ADDRESS_WIDTH : integer := 22; --OTPRILIKE 
+		RAM_ADDRESS_WIDTH : integer := 22
+	);
 	port
 	(
-		dout : out std_logic_vector(2 downto 0);
-		adr : in std_logic_vector(18 downto 0); --307200 pix -> 19 bits needed
-		finished_frame : in std_logic_vector(1 downto 0);
-		vsync:in std_logic;		--carefull, vsync is inverted here, pulses are 0
 		clk : in std_logic;
 		reset : in std_logic;
-		address_out:	out std_logic_vector(21 downto 0);
-		data_in : in std_logic_vector(15 downto 0)
+		xpos : in std_logic_vector(9 downto 0); 
+		ypos : in std_logic_vector(8 downto 0);
+		valid : in std_logic;
+		v_sync : in std_logic;
+		read_address : out std_logic_vector(RAM_ADDRESS_WIDTH-1 downto 0);
+		read_data : in std_logic_vector(15 downto 0);
+		data_out : out std_logic_vector(2 downto 0)
  	);
 end read_interface;
 
 architecture read_interface_arch of read_interface is
-
-	type state_type is ( WAIT_FRAME, RD, RD_REFRESH );
 	
-	signal current_state, next_state : state_type := WAIT_FRAME;
-	signal data_buf: std_logic_vector(11 downto 0) := (others => '0');
-	signal address_buf : std_logic_vector(21 downto 0) := (others => '0');
-	signal address_latch : std_logic_vector(21 downto 0) := (others => '0');
-	signal current_frame : std_logic_vector(1 downto 0) := "00";
-	signal new_address : std_logic;
+	type state_type is ( SETUP_FRAME, LATCH, DATA, WAIT_ROW );
+
+	constant LA_BITS : integer := INTEGER(CEIL(LOG2(REAL(NUM_BYTES*4))));
+	
+	signal current_state, next_state : state_type;
+	signal data_cnt, next_data_cnt : unsigned(5 downto 0); 
+	signal data_buffer, next_data_buffer : std_logic_vector(NUM_BYTES*8-1 downto 0);
+	signal serving_address, next_serving_address, calculated_address : std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+	signal tmp_data_out, next_data_out : std_logic_vector(2 downto 0);
+	signal local_address : std_logic_vector(LA_BITS-1 downto 0);
+	signal ram_address : std_logic_vector(ADDRESS_WIDTH-1 downto 2);
+	signal tmp_read_address, next_read_address : unsigned(RAM_ADDRESS_WIDTH-1 downto 0);
 	
 begin
-		
-	new_address <= '0' when (address_buf(16 downto 0) = adr(18 downto 2)) else '1';
+
+
+
 	
-	address_out <= address_latch;
+	calculated_address <= "000" & std_logic_vector( to_unsigned(FRAME_WIDTH,10) * unsigned(ypos) + unsigned(xpos) );
 	
+	
+	local_address <= calculated_address(LA_BITS-1 downto 0);
+	ram_address <= calculated_address(ADDRESS_WIDTH-1 downto 2); --MORA DA SE PROVERI STA ZNACI ADRESIRANJE U 16 bitnom modu!!! 
+	
+	
+	
+--data_cnt
+-- uvek 3 bita
+-- LA->D1 [0-1]  data[0] buffer[4*0+2:4*0]  2:0
+-- D1->D2 [1-2]  data[1] buffer[4*1+2:4*1]  6:4
+-- D2->D3 [2-3]  data[2] buffer[4*2+2:4*2]	10:8
+-- D3->LA [3-0]  data[3]  
+--
+--
 next_state_logic:
-	process ( current_state , new_address, vsync) is
+	process (current_state, data_cnt, data_buffer, serving_address, tmp_data_out, v_sync, valid, local_address, tmp_read_address, read_data) is
 	begin
-		if (vsync = '0') then
-			next_state <= WAIT_FRAME;
-		elsif (new_address = '1') then
-			next_state <= RD_REFRESH;
-		else
-			next_state <= RD;
-		end if;
+		next_state <= current_state;
+		next_data_cnt <= data_cnt;
+		next_data_buffer <= data_buffer;
+		next_serving_address <= serving_address;
+		next_read_address <= tmp_read_address;
+		next_data_out <= tmp_data_out;
+		case (current_state) is
+			when SETUP_FRAME =>
+				if (v_sync = '1') then
+					next_state <=  SETUP_FRAME;
+				else
+					next_state <=  WAIT_ROW;
+					next_data_buffer <= read_data;
+					next_serving_address <= std_logic_vector(tmp_read_address);
+					next_read_address <= to_unsigned(NUM_BYTES / 2, RAM_ADDRESS_WIDTH);
+				end if;
+			when LATCH =>
+				if (valid = '1') then
+					next_data_out <= data_buffer(4*to_integer(data_cnt)+2 downto 4*to_integer(data_cnt));
+					next_state <= DATA;
+					next_data_cnt <= to_unsigned(1,6);
+				else
+					next_state <= WAIT_ROW;
+				end if;				
+			when DATA =>
+				if (local_address = std_logic_vector(to_unsigned(NUM_BYTES * 4 - 1, LA_BITS))) then
+					next_data_out <= data_buffer(4*to_integer(data_cnt)+2 downto 4*to_integer(data_cnt)); 
+					next_state <= LATCH;
+					next_data_buffer <= read_data;
+					next_serving_address <= std_logic_vector(tmp_read_address);
+					next_data_cnt <= to_unsigned(0,6);
+					next_read_address <= tmp_read_address + NUM_BYTES / 2;
+				else
+					next_data_out <= data_buffer(4*to_integer(data_cnt)+2 downto 4*to_integer(data_cnt)); 
+					next_state <= DATA;
+					next_data_cnt <= data_cnt + to_unsigned(1,6);
+				end if;
+			when WAIT_ROW =>
+				if (v_sync = '1') then
+					next_state <= SETUP_FRAME;
+					next_read_address <= to_unsigned(0, RAM_ADDRESS_WIDTH);
+				elsif (valid = '1') then
+					next_data_out <= data_buffer(NUM_BYTES*8-2 downto NUM_BYTES*8-4);
+					next_state <= DATA;
+					next_data_cnt <= to_unsigned(1,6);
+				else
+					next_state <= WAIT_ROW;
+				end if;
+		end case;
 	end process;
 
 state_transition:
-	process (clk, reset) is
+	process ( clk, reset ) is
 	begin
 		if (reset = '1') then
-			current_state <= WAIT_FRAME;
-			current_frame <= "00";
-			data_buf <= (others => '0');
-			address_buf <= (others => '0');
-			address_latch <= (others => '0');
-			dout <= "000";
+			current_state <= WAIT_ROW;
+			data_cnt <= to_unsigned(0,6);			--DON'T CARE
+			data_buffer <= next_data_buffer;
+			serving_address <= std_logic_vector(to_unsigned(0,ADDRESS_WIDTH)); --DON'T CARE
+			tmp_read_address <= (others => '0');
+			tmp_data_out <= (others => '0');
 		elsif (rising_edge(clk)) then
 			current_state <= next_state;
-			case (next_state) is
-				when WAIT_FRAME =>
-					if not (current_state = WAIT_FRAME) then
-						address_latch(21 downto 20) <= finished_frame;
-						address_latch(16 downto 0) <= (others => '0');
-						current_frame <= finished_frame;
-						data_buf <= data_in(11 downto 0);
-					end if;
-					dout <= "000";
-				when RD =>
-					case (adr(1 downto 0)) is
-						when "00" =>
-							dout <= data_buf(2 downto 0);
-						when "01" =>
-							dout <= data_buf(5 downto 3);
-						when "10" =>
-							dout <= data_buf(8 downto 6);
-						when "11" =>
-							dout <= data_buf(11 downto 9);
-						when others =>
-					end case;
-				when RD_REFRESH =>
-					case (adr(1 downto 0)) is
-						when "00" =>
-							dout <= data_in(2 downto 0);
-						when "01" =>
-							dout <= data_in(5 downto 3);
-						when "10" =>
-							dout <= data_in(8 downto 6);
-						when "11" =>
-							dout <= data_in(11 downto 9);
-						when others =>
-					end case;
-					address_buf <= address_latch;
-					address_latch <= (others => '0');
-					address_latch(21 downto 20) <= current_frame;
-					address_latch(16 downto 0) <= std_logic_vector(unsigned(adr(18 downto 2)) + "1"); --hope this works
-					data_buf <= data_in(11 downto 0);
-			end case;					
+			data_cnt <= next_data_cnt;
+			data_buffer <= next_data_buffer;
+			serving_address <= next_serving_address;
+			tmp_read_address <= next_read_address;
+			tmp_data_out <= next_data_out;
 		end if;
 	end process;
+	
+	data_out <= tmp_data_out;
+	read_address <= std_logic_vector(tmp_read_address);
 	
 end read_interface_arch;
