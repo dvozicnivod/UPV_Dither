@@ -39,7 +39,7 @@
 
 set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE6E22C8
-set_global_assignment -name TOP_LEVEL_ENTITY read_interface
+set_global_assignment -name TOP_LEVEL_ENTITY vga_sync_subframe
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 17.0.2
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:00:43  AUGUST 17, 2019"
 set_global_assignment -name LAST_QUARTUS_VERSION "20.1.1 Lite Edition"
@@ -52,18 +52,7 @@ set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
-set_global_assignment -name VHDL_FILE SDRAM_control.vhd
-set_global_assignment -name VHDL_FILE dither_engine.vhd
-set_global_assignment -name VHDL_FILE cam_read.vhd
-set_global_assignment -name VHDL_FILE cam_ctr.vhd
-set_global_assignment -name VHDL_FILE write_interface.vhd
-set_global_assignment -name VHDL_FILE vga_sync.vhd
-set_global_assignment -name QIP_FILE pll.qip
-set_global_assignment -name VHDL_FILE read_interface.vhd
-set_global_assignment -name VHDL_FILE vga_interface.vhd
-set_global_assignment -name VHDL_FILE UPV_Projekat_Dither.vhd
 set_global_assignment -name OPTIMIZATION_MODE BALANCED
-set_global_assignment -name TCL_SCRIPT_FILE pin_assign.tcl
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED"
 set_global_assignment -name ENABLE_INIT_DONE_OUTPUT OFF
 set_location_assignment PIN_23 -to clk_50
@@ -143,15 +132,26 @@ set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-
 set_global_assignment -name TIMEQUEST_REPORT_SCRIPT_INCLUDE_DEFAULT_ANALYSIS OFF
 set_location_assignment PIN_127 -to test1
 set_location_assignment PIN_84 -to test2
-set_global_assignment -name SMF_FILE fsm_test/UPV_Projekat_Dither.smf
-set_global_assignment -name VHDL_FILE cam_mem_uart.vhd
-set_global_assignment -name VHDL_FILE uart_bullshit.vhd
-set_global_assignment -name VHDL_FILE memory_debug.vhd
-set_global_assignment -name VHDL_FILE memory_debug_uart.vhd
 set_location_assignment PIN_88 -to button[0]
 set_location_assignment PIN_89 -to button[1]
 set_location_assignment PIN_90 -to button[2]
 set_location_assignment PIN_91 -to button[3]
+set_global_assignment -name VHDL_FILE vga_sync_subframe.vhd
+set_global_assignment -name VHDL_FILE SDRAM_control.vhd
+set_global_assignment -name VHDL_FILE dither_engine.vhd
+set_global_assignment -name VHDL_FILE cam_read.vhd
+set_global_assignment -name VHDL_FILE cam_ctr.vhd
+set_global_assignment -name VHDL_FILE write_interface.vhd
+set_global_assignment -name VHDL_FILE vga_sync.vhd
+set_global_assignment -name QIP_FILE pll.qip
+set_global_assignment -name VHDL_FILE read_interface.vhd
+set_global_assignment -name VHDL_FILE vga_interface.vhd
+set_global_assignment -name VHDL_FILE UPV_Projekat_Dither.vhd
+set_global_assignment -name TCL_SCRIPT_FILE pin_assign.tcl
+set_global_assignment -name VHDL_FILE cam_mem_uart.vhd
+set_global_assignment -name VHDL_FILE uart_bullshit.vhd
+set_global_assignment -name VHDL_FILE memory_debug.vhd
+set_global_assignment -name VHDL_FILE memory_debug_uart.vhd
 set_global_assignment -name QIP_FILE error_memory.qip
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
