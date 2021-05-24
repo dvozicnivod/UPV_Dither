@@ -3,13 +3,14 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
+--TODO, possibly check adress with xpos, ypos to make sure reading correct location
+
 entity read_interface is
 	generic
 	(
 		FRAME_WIDTH : integer := 640;
 		NUM_BYTES : integer := 2;
-		ADDRESS_WIDTH : integer := 22; --OTPRILIKE 
-		RAM_ADDRESS_WIDTH : integer := 22
+		ADDRESS_WIDTH : integer := 22
 	);
 	port
 	(
@@ -19,7 +20,7 @@ entity read_interface is
 		ypos : in std_logic_vector(8 downto 0);
 		valid : in std_logic;
 		v_sync : in std_logic;
-		read_address : out std_logic_vector(RAM_ADDRESS_WIDTH-1 downto 0);
+		read_address : out std_logic_vector(ADDRESS_WIDTH-1 downto 0);
 		read_data : in std_logic_vector(15 downto 0);
 		data_out : out std_logic_vector(2 downto 0)
  	);
@@ -38,7 +39,7 @@ architecture read_interface_arch of read_interface is
 	signal tmp_data_out, next_data_out : std_logic_vector(2 downto 0);
 	signal local_address : std_logic_vector(LA_BITS-1 downto 0);
 	signal ram_address : std_logic_vector(ADDRESS_WIDTH-1 downto 2);
-	signal tmp_read_address, next_read_address : unsigned(RAM_ADDRESS_WIDTH-1 downto 0);
+	signal tmp_read_address, next_read_address : unsigned(ADDRESS_WIDTH-1 downto 0);
 	
 begin
 
@@ -78,7 +79,7 @@ next_state_logic:
 					next_state <=  WAIT_ROW;
 					next_data_buffer <= read_data;
 					next_serving_address <= std_logic_vector(tmp_read_address);
-					next_read_address <= to_unsigned(NUM_BYTES / 2, RAM_ADDRESS_WIDTH);
+					next_read_address <= to_unsigned(NUM_BYTES / 2, ADDRESS_WIDTH);
 				end if;
 			when LATCH =>
 				if (valid = '1') then
@@ -89,7 +90,7 @@ next_state_logic:
 					next_state <= WAIT_ROW;
 				end if;				
 			when DATA =>
-				if (local_address = std_logic_vector(to_unsigned(NUM_BYTES * 4 - 1, LA_BITS))) then
+				if (data_cnt = to_unsigned(NUM_BYTES * 2 - 1, LA_BITS)) then
 					next_data_out <= data_buffer(4*to_integer(data_cnt)+2 downto 4*to_integer(data_cnt)); 
 					next_state <= LATCH;
 					next_data_buffer <= read_data;
@@ -104,11 +105,11 @@ next_state_logic:
 			when WAIT_ROW =>
 				if (v_sync = '1') then
 					next_state <= SETUP_FRAME;
-					next_read_address <= to_unsigned(0, RAM_ADDRESS_WIDTH);
+					next_read_address <= to_unsigned(0, ADDRESS_WIDTH);
 				elsif (valid = '1') then
-					next_data_out <= data_buffer(NUM_BYTES*8-2 downto NUM_BYTES*8-4);
 					next_state <= DATA;
 					next_data_cnt <= to_unsigned(1,6);
+					next_data_out <= data_buffer(4*to_integer(data_cnt)+2 downto 4*to_integer(data_cnt)); --U ovom slucaju uvek cnt 0
 				else
 					next_state <= WAIT_ROW;
 				end if;
