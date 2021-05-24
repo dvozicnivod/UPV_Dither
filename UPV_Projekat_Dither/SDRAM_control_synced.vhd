@@ -2,6 +2,9 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+--BURST 2!!
+--Also redo for state machine
+
 --When given a new address on read or write it will read/ write the date on the data line
 --into memory and output a 1 on the complete line
 --must give it at least 5% of unused time for refreshing, continuous use no more than 60ms
@@ -23,7 +26,7 @@ entity SDRAM_control_synced is
 		--Control signals
 		a_write, a_read : in std_logic_vector(21 downto 0);
 		d_write	:	in std_logic_vector(31 downto 0);
-		d_read	:	out std_logic_vector(31 downto 0) := (others => '1');
+		d_read	:	out std_logic_vector(31 downto 0);
 		--Status signals
 		w_complete	: out std_logic;
 		r_complete	: out std_logic;
@@ -87,7 +90,7 @@ next_state_logic:
 					next_state <= REFRESH_CYCLE;
 				end if;
 			when OTHERS =>
-				if (state_cnt = 8) then
+				if (state_cnt = 6) then
 					next_state_cnt <= 0;
 					next_state <= IDLE;
 				else
@@ -114,11 +117,11 @@ state_transition:
 			init_cnt <= next_init_cnt;
 			case (current_state) is
 				when READ_CYCLE =>
-					if (state_cnt = 8) then
+					if (state_cnt = 6) then
 						p_a_read <= a_read;
 					end if;
 				when WRITE_CYCLE =>
-					if (state_cnt = 8) then 
+					if (state_cnt = 6) then 
 						p_a_write <= a_write;
 					end if;
 				when OTHERS =>
@@ -159,7 +162,7 @@ Q_latch_process:
 	
 --Made according to current state and then latched to output on falling edge of same state!
 output_logic:
-	process(current_state, state_cnt, init_cnt, a_read, a_write, d_write) is
+	process(current_state, state_cnt, init_cnt, a_read, a_write, d_write, next_state_cnt, next_init_cnt) is
 	begin
 		cs_n_l <= '1';
 		ras_n_l <= '1';
@@ -169,9 +172,9 @@ output_logic:
 		a_sdram_l <= (others => '1');
 		we_n_l <= '1';
 		d_sdram_l <= (others => 'Z');
-		case (current_state) is
+		case (next_state) is
 			when INIT =>
-				case (init_cnt) is
+				case (next_init_cnt) is
 					when SETUP_CYCLES =>
 						cs_n_l <= '0';
 						ras_n_l <= '0';
@@ -193,7 +196,7 @@ output_logic:
 				end case;
 			when IDLE =>
 			when READ_CYCLE =>
-				case (state_cnt) is
+				case (next_state_cnt) is
 					when 1 =>
 						--activate row command
 						cs_n_l <= '0';
@@ -210,12 +213,12 @@ output_logic:
 						dqmh_l <= '0';
 						dqml_l <= '0';
 					when 4 =>
-						dqmh_l <= '0';	--Treba jos jedan da bi se odradio burst!
+						dqmh_l <= '0';	--Burst 2/2
 						dqml_l <= '0';
 					when others =>
 				end case;
 			when WRITE_CYCLE =>
-				case (state_cnt) is
+				case (next_state_cnt) is
 					when 1 =>
 						--activate row command
 						cs_n_l <= '0';
@@ -240,7 +243,7 @@ output_logic:
 					when others =>
 				end case;
 			when REFRESH_CYCLE =>
-				if (state_cnt = 1) then
+				if (next_state_cnt = 1) then
 					cs_n_l <= '0';
 					cas_n_l <= '0';
 					ras_n_l <= '0';
@@ -285,9 +288,9 @@ input_latch_process:
 		elsif (falling_edge(clk)) then
 			if (current_state = READ_CYCLE) then
 				case (state_cnt) is
-					when 6 =>
+					when 5 =>
 						d_read(15 downto 0) <= q_sdram_l;
-					when 7 =>
+					when 6 =>
 						d_read(31 downto 16) <= q_sdram_l;
 					when others =>
 				end case;
