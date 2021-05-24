@@ -120,7 +120,10 @@ state_transition:
 	end process;
 	a_write <= addr_out;
 	a_read	<= addr_rd;
-	d_write <= ((addr_out(15 downto 0)) & (not addr_out(15 downto 0))); --Very much todo
+	d_write(31 downto 24) <= addr_out(9 downto 2);
+	d_write(23	downto 16) <= addr_out(10 downto 3);
+	d_write(15 downto 8) <= addr_out(11 downto 4); --Very much todo
+	d_write(7 downto 0) <= addr_out(12 downto 5); --Very much todo
 	
 	--uart_data <= d_read(7 downto 0);	
    --uart_data <= std_logic_vector(to_unsigned(channel,8));
