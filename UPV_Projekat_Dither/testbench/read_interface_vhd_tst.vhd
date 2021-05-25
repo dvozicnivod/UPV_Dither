@@ -47,21 +47,21 @@ COMPONENT read_interface
 	generic
 	(
 		FRAME_WIDTH : integer := 640;
-		NUM_BYTES : integer := 2;
-		ADDRESS_WIDTH : integer := 22; --OTPRILIKE 
-		RAM_ADDRESS_WIDTH : integer := 22
+		NUM_BYTES : integer := 4;
+		ADDRESS_WIDTH : integer := 22
 	);
-	PORT (
-	clk : IN STD_LOGIC;
-	data_out : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
-	read_address : OUT STD_LOGIC_VECTOR(21 DOWNTO 0);
-	read_data : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-	reset : IN STD_LOGIC;
-	v_sync : IN STD_LOGIC;
-	valid : IN STD_LOGIC;
-	xpos : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
-	ypos : IN STD_LOGIC_VECTOR(8 DOWNTO 0)
-	);
+	port
+	(
+		clk : in std_logic;
+		reset : in std_logic;
+		xpos : in std_logic_vector(9 downto 0); 
+		ypos : in std_logic_vector(8 downto 0);
+		valid : in std_logic;
+		v_sync : in std_logic;
+		read_address : out std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+		read_data : in std_logic_vector(15 downto 0);
+		data_out : out std_logic_vector(2 downto 0)
+ 	);
 END COMPONENT;
 BEGIN
 	i1 : read_interface
