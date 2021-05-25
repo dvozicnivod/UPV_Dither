@@ -136,8 +136,8 @@ component SDRAM_control_synced is
 		clk		: in	std_logic;
 		--Control signals
 		a_write, a_read : in std_logic_vector(21 downto 0);
-		d_write	:	in std_logic_vector(31 downto 0);
-		d_read	:	out std_logic_vector(31 downto 0) := (others => '1');
+		d_write	:	in std_logic_vector(63 downto 0);
+		d_read	:	out std_logic_vector(63 downto 0) := (others => '1');
 		--Status signals
 		w_complete	: out std_logic;
 		r_complete	: out std_logic;

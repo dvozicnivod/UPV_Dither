@@ -2,7 +2,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
---BURST 2!!
+--BURST 4!!
 --Also redo for state machine
 
 --When given a new address on read or write it will read/ write the date on the data line
@@ -12,7 +12,7 @@ use IEEE.numeric_std.all;
 --after reset cannot read 0 address initially. lol, doesn't need to be perfect :)
 --FOR USE WITH 64Mbit SDRAM at 100MHz , cas 2, 2B output
 
-entity SDRAM_control_synced is
+entity SDRAM_control_B4 is
 
 	generic
 	(
@@ -25,8 +25,8 @@ entity SDRAM_control_synced is
 		clk		: in	std_logic;
 		--Control signals
 		a_write, a_read : in std_logic_vector(21 downto 0);
-		d_write	:	in std_logic_vector(31 downto 0);
-		d_read	:	out std_logic_vector(31 downto 0);
+		d_write	:	in std_logic_vector(63 downto 0);
+		d_read	:	out std_logic_vector(63 downto 0);
 		--Status signals
 		w_complete	: out std_logic;
 		r_complete	: out std_logic;
@@ -40,11 +40,11 @@ entity SDRAM_control_synced is
 		we_n		:	out std_logic;
 		clk_en	:	out std_logic
 	);
-end SDRAM_control_synced;
+end SDRAM_control_B4;
 
 --TODO!!!
 
-architecture SDRAM_control_arch of SDRAM_control_synced is
+architecture SDRAM_control_arch of SDRAM_control_B4 is
 	constant INIT_CYCLES :integer :=  SETUP_CYCLES + 2 + 8*8 + 2;
 	
 	type state_type is ( IDLE, INIT, READ_CYCLE, WRITE_CYCLE, REFRESH_CYCLE );
@@ -89,8 +89,17 @@ next_state_logic:
 				else
 					next_state <= REFRESH_CYCLE;
 				end if;
-			when OTHERS =>
+			when REFRESH_CYCLE =>
+			--This is according to Trc = 70ns -> 7 cycles between two ACT/REFR
 				if (state_cnt = 6) then
+					next_state_cnt <= 0;
+					next_state <= IDLE;
+				else
+					next_state_cnt <= state_cnt + 1;
+					next_state <= current_state;
+				end if;
+			when OTHERS =>
+				if (state_cnt = 8) then
 					next_state_cnt <= 0;
 					next_state <= IDLE;
 				else
@@ -117,11 +126,11 @@ state_transition:
 			init_cnt <= next_init_cnt;
 			case (current_state) is
 				when READ_CYCLE =>
-					if (state_cnt = 6) then
+					if (state_cnt = 8) then
 						p_a_read <= a_read;
 					end if;
 				when WRITE_CYCLE =>
-					if (state_cnt = 6) then 
+					if (state_cnt = 8) then 
 						p_a_write <= a_write;
 					end if;
 				when OTHERS =>
@@ -185,13 +194,13 @@ output_logic:
 						cas_n_l <= '0';
 						ras_n_l <= '0';
 					when SETUP_CYCLES+2+8*8 -1 => 
-						a_sdram_l(12 downto 0) <= "0000000100001"; --burst from low bits, cas 2, serial read, burst 2  for security one before TODO
+						a_sdram_l(12 downto 0) <= "0000000100010"; --burst from low bits, cas 2, serial read, burst 2  for security one before TODO
 					when SETUP_CYCLES+2+8*8 => 
 						cs_n_l <= '0';
 						cas_n_l <= '0';
 						ras_n_l <= '0';
 						we_n_l <= '0';
-						a_sdram_l(12 downto 0) <= "0000000100001"; --burst from low bits, cas 2, serial read, burst 2
+						a_sdram_l(12 downto 0) <= "0000000100010"; --burst from low bits, cas 2, serial read, burst 2
 					when others =>
 				end case;
 			when IDLE =>
@@ -213,7 +222,13 @@ output_logic:
 						dqmh_l <= '0';
 						dqml_l <= '0';
 					when 4 =>
-						dqmh_l <= '0';	--Burst 2/2
+						dqmh_l <= '0';	--Burst 2/4
+						dqml_l <= '0';
+					when 5 =>
+						dqmh_l <= '0';	--Burst 3/4
+						dqml_l <= '0';
+					when 6 =>
+						dqmh_l <= '0';	--Burst 4/4
 						dqml_l <= '0';
 					when others =>
 				end case;
@@ -237,9 +252,17 @@ output_logic:
 						dqml_l <= '0';
 						d_sdram_l <= d_write(15 downto 0);
 					when 4 =>
-						dqmh_l <= '0';
+						dqmh_l <= '0';			--BURST 2/4
 						dqml_l <= '0';
 						d_sdram_l <= d_write(31 downto 16);
+					when 5 =>
+						dqmh_l <= '0';			--BURST 3/4
+						dqml_l <= '0';
+						d_sdram_l <= d_write(47 downto 32);
+					when 6 =>
+						dqmh_l <= '0';			--BURST 4/4
+						dqml_l <= '0';
+						d_sdram_l <= d_write(63 downto 48);
 					when others =>
 				end case;
 			when REFRESH_CYCLE =>
@@ -292,6 +315,10 @@ input_latch_process:
 						d_read(15 downto 0) <= q_sdram_l;
 					when 6 =>
 						d_read(31 downto 16) <= q_sdram_l;
+					when 7 =>
+						d_read(47 downto 32) <= q_sdram_l;
+					when 8 =>
+						d_read(63 downto 48) <= q_sdram_l;
 					when others =>
 				end case;
 			end if;
