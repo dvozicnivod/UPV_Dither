@@ -12,7 +12,8 @@ entity cam_read is
 		R,G,B	: out std_logic_vector (4 downto 0);
 		valid: out std_logic := '0';
 		x	:out std_logic_vector (9 downto 0);
-		y 	:out std_logic_vector (8 downto 0)
+		y 	:out std_logic_vector (8 downto 0);
+		href_out : out std_logic
 	);
 end cam_read;
 
@@ -103,6 +104,11 @@ output_logic:
 			valid <= '1';
 		else
 			valid <= '0';
+		end if;
+		if (current_state = READ_1 or current_state = READ_2) then
+			href_out <= '1';
+		else
+			href_out <= '0';
 		end if;
 	end process;
 	
