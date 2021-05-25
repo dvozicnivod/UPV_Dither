@@ -9,6 +9,7 @@ entity UPV_Projekat_Dither is
 		button	: in std_logic_vector(3 downto 0);
 		test1: out std_logic;		--TODO   test1 used as TX for MSP UART pin 127
 		test2: out std_logic;	--TODO EXTREME , smer bio IN dok se citao btn za uart, sada 125
+		test3: in std_logic; --Koristi za RX!! 
 		--TODO   test2 used as BUTTON for test pin 88, used to be   125
 		clk_50 : in std_logic;		
 		reset_n : in std_logic;	
@@ -108,7 +109,7 @@ END component;
 --end component;
 --TODO endblock
 
-component memory_debug_uart is
+component memory_debug_uart_b4 is
 	generic (
 		Atot : integer := 100000	--How many adresses to test, will take 
 	);
@@ -117,19 +118,21 @@ component memory_debug_uart is
 		reset 	: in std_logic;
 		
 		a_write, a_read : out std_logic_vector(21 downto 0);
-		d_write			: out std_logic_vector(31 downto 0);
-		d_read			: in std_logic_vector(31 downto 0) := (others => '1');
+		d_write			: out std_logic_vector(63 downto 0);
+		d_read			: in std_logic_vector(63 downto 0) := (others => '1');
 		btn				: in std_logic_vector(3 downto 0);
 		w_complete		: in std_logic;
 		r_complete		: in std_logic;
 		
-		uart_data		: out std_logic_vector(7 downto 0);
-		uart_req			: out std_logic := '0';
-		waiting : out std_logic;
-		uart_busy 		: in std_logic
+		tx_data			: out std_logic_vector(7 downto 0);
+		tx_req			: out std_logic := '0';
+		waiting 		: out std_logic;
+		tx_busy 		: in std_logic;
+		rx_data			: in std_logic_vector(7 downto 0);
+		rx_busy 		: in std_logic
 	);
 end component;
---TODO final test
+
 
 component pll is
 	PORT
@@ -143,15 +146,15 @@ component pll is
 end component;
 
 
-component SDRAM_control_synced is
+component SDRAM_control_B4 is
 	port
 	(
 		reset 	: in	std_logic;
 		clk		: in	std_logic;
 		--Control signals
 		a_write, a_read : in std_logic_vector(21 downto 0);
-		d_write	:	in std_logic_vector(31 downto 0);
-		d_read	:	out std_logic_vector(31 downto 0) := (others => '1');
+		d_write	:	in std_logic_vector(63 downto 0);
+		d_read	:	out std_logic_vector(63 downto 0) := (others => '1');
 		--Status signals
 		w_complete	: out std_logic;
 		r_complete	: out std_logic;
@@ -193,9 +196,9 @@ signal write_adr : std_logic_vector(18 downto 0);	--adr
 	--write_interface
 signal finished_frame : std_logic_vector(1 downto 0);	--finished_frame
 signal s_ctr_wr_adr : std_logic_vector(21 downto 0);	--address_out
-signal s_ctr_wr_data : std_logic_vector(31 downto 0);	--data_out
+signal s_ctr_wr_data : std_logic_vector(63 downto 0);	--data_out
 	--SDRAM_control
-signal s_ctr_rd_data : std_logic_vector(31 downto 0);	--d_read
+signal s_ctr_rd_data : std_logic_vector(63 downto 0);	--d_read
 	--read_interface
 signal RGB_dither_read : std_logic_vector(2 downto 0);	--dout
 signal s_ctr_rd_adr : std_logic_vector(21 downto 0);	--address_out
@@ -215,13 +218,13 @@ signal waiting : std_logic;
 
 
 --SIGNALI za test TODO
-signal tx_busy, tx_en : std_logic;
+signal tx_busy, tx_en, rx_busy : std_logic;
 
 
 
 signal x_cam : std_logic_vector(9 downto 0);
 
-signal tx_data : std_logic_vector(7 downto 0);
+signal tx_data, rx_data : std_logic_vector(7 downto 0);
 
 begin
 
@@ -262,10 +265,10 @@ begin
 		reset_n	=> not reset,
 		tx_ena	=> tx_en,
 		tx_data	=> tx_data,
-		rx			=> '1',							
-		rx_busy	=> OPEN,							
+		rx			=> test3,							
+		rx_busy	=> rx_busy,							
 		rx_error	=> OPEN,							
-		rx_data	=> OPEN,
+		rx_data	=> rx_data,
 		tx_busy	=> tx_busy,	
 		tx			=> test1 	--TODO EXTREME   test1 ovdje bio za uart--TODO pazi, test1 je RX, pin 127
 		);			
@@ -303,14 +306,13 @@ pll_inst:  pll
 --
 --	);
 --	
-
-
-mem_deb_inst: memory_debug_uart
+	
+mem_deb_inst: memory_debug_uart_b4
 	generic map(
 		Atot => 100000	--How many adresses to test, will take 
 	)
 	port map(
-		clk 	=> c_sccb,
+		clk => c_sccb,
 		reset => reset,
 		
 		a_write => s_ctr_wr_adr,
@@ -320,18 +322,24 @@ mem_deb_inst: memory_debug_uart
 		btn	=> button,
 		w_complete		=> w_complete,
 		r_complete		=> r_complete,
-		uart_data		=> tx_data,
-		uart_req			=> tx_en,
+		tx_data		=> tx_data,
+		tx_req			=> tx_en,
 		waiting => waiting,
-		uart_busy  => tx_busy
+		tx_busy  => tx_busy,
+		rx_data => rx_data,
+		rx_busy => rx_busy
 	);
+	
+	
+	
+	
 --TODO final test
 	
 	test2 <= waiting ;		--TODO this is status led, was   waiting
 	
 	
 	
-SDRAM_control_inst:  SDRAM_control_synced
+SDRAM_control_inst:  SDRAM_control_B4
 	port map (  
 		reset 	=> reset,
 		clk	=> c_sdram_int,

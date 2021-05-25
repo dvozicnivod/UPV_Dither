@@ -39,7 +39,7 @@
 
 set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE6E22C8
-set_global_assignment -name TOP_LEVEL_ENTITY SDRAM_control_B4
+set_global_assignment -name TOP_LEVEL_ENTITY UPV_Projekat_Dither
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 17.0.2
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:00:43  AUGUST 17, 2019"
 set_global_assignment -name LAST_QUARTUS_VERSION "20.1.1 Lite Edition"
@@ -132,37 +132,15 @@ set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-
 set_global_assignment -name TIMEQUEST_REPORT_SCRIPT_INCLUDE_DEFAULT_ANALYSIS OFF
 set_location_assignment PIN_127 -to test1
 set_location_assignment PIN_84 -to test2
-set_location_assignment PIN_88 -to button[0]
-set_location_assignment PIN_89 -to button[1]
-set_location_assignment PIN_90 -to button[2]
-set_location_assignment PIN_91 -to button[3]
-set_global_assignment -name VHDL_FILE SDRAM_control_B4.vhd
-set_global_assignment -name VHDL_FILE SDRAM_control_synced.vhd
-set_global_assignment -name VHDL_FILE SDRAM_control.vhd
-set_global_assignment -name VHDL_FILE dither_engine.vhd
-set_global_assignment -name VHDL_FILE cam_read.vhd
-set_global_assignment -name VHDL_FILE cam_ctr.vhd
-set_global_assignment -name VHDL_FILE write_interface.vhd
-set_global_assignment -name VHDL_FILE vga_sync.vhd
-set_global_assignment -name QIP_FILE pll.qip
-set_global_assignment -name VHDL_FILE read_interface.vhd
-set_global_assignment -name VHDL_FILE vga_interface.vhd
-set_global_assignment -name VHDL_FILE UPV_Projekat_Dither.vhd
-set_global_assignment -name TCL_SCRIPT_FILE pin_assign.tcl
-set_global_assignment -name SMF_FILE fsm_test/UPV_Projekat_Dither.smf
-set_global_assignment -name VHDL_FILE output_files/uart.vhd
-set_global_assignment -name VHDL_FILE cam_mem_uart.vhd
-set_global_assignment -name VHDL_FILE uart_bullshit.vhd
-set_global_assignment -name VHDL_FILE memory_debug.vhd
-set_global_assignment -name VHDL_FILE memory_debug_uart.vhd
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to c_cam
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to c_sdram
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to vga_r
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to vga_g
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to vga_b
+set_location_assignment PIN_88 -to button[0]
+set_location_assignment PIN_89 -to button[1]
+set_location_assignment PIN_90 -to button[2]
+set_location_assignment PIN_91 -to button[3]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_data[0]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_data[1]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_data[2]
@@ -200,4 +178,27 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_we
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_cs
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_dqmh
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_dqml
+set_global_assignment -name VHDL_FILE SDRAM_control_B4.vhd
+set_global_assignment -name VHDL_FILE SDRAM_control_synced.vhd
+set_global_assignment -name VHDL_FILE SDRAM_control.vhd
+set_global_assignment -name VHDL_FILE dither_engine.vhd
+set_global_assignment -name VHDL_FILE cam_read.vhd
+set_global_assignment -name VHDL_FILE cam_ctr.vhd
+set_global_assignment -name VHDL_FILE write_interface.vhd
+set_global_assignment -name VHDL_FILE vga_sync.vhd
+set_global_assignment -name QIP_FILE pll.qip
+set_global_assignment -name VHDL_FILE read_interface.vhd
+set_global_assignment -name VHDL_FILE vga_interface.vhd
+set_global_assignment -name VHDL_FILE UPV_Projekat_Dither.vhd
+set_global_assignment -name TCL_SCRIPT_FILE pin_assign.tcl
+set_global_assignment -name SMF_FILE fsm_test/UPV_Projekat_Dither.smf
+set_global_assignment -name VHDL_FILE cam_mem_uart.vhd
+set_global_assignment -name VHDL_FILE uart_bullshit.vhd
+set_global_assignment -name VHDL_FILE memory_debug.vhd
+set_global_assignment -name VHDL_FILE memory_debug_uart.vhd
+set_global_assignment -name VHDL_FILE memory_debug_uart_b4.vhd
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_location_assignment PIN_120 -to test3
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

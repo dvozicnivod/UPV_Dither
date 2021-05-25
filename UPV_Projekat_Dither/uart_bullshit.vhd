@@ -27,7 +27,7 @@ ENTITY uart_bullshit IS
 	GENERIC(
 		clk_freq		:	INTEGER		:= 50_000_000;	--frequency of system clock in Hertz
 		baud_rate	:	INTEGER		:= 115_200;		--data link baud rate in bits/second
-		os_rate		:	INTEGER		:= 4;			--TODO - change back to 16   --oversampling rate to find center of receive bits (in samples per baud period)
+		os_rate		:	INTEGER		:= 16;			--TODO - change back to 16   --oversampling rate to find center of receive bits (in samples per baud period)
 		d_width		:	INTEGER		:= 8; 			--data bus width
 		parity		:	INTEGER		:= 0;				--0 for no parity, 1 for parity
 		parity_eo	:	STD_LOGIC	:= '0');			--'0' for even, '1' for odd parity
