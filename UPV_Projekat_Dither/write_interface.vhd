@@ -6,7 +6,7 @@ entity write_interface is
 	generic
 	(
 		FRAME_WIDTH : integer := 640;
-		NUM_BYTES : integer := 8
+		NUM_BYTES : integer := 4
 	);
 	port
 	(
@@ -92,7 +92,7 @@ state_transition:
 		end if;
 	end process;
 	
-	address_out <= address_out_tmp;
+	address_out <= "00" & address_out_tmp(18 downto 2);
 	data_out <= data_out_tmp;	
 	
 end write_interface_arch;

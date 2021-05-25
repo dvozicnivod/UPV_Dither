@@ -9,7 +9,7 @@ entity read_interface is
 	generic
 	(
 		FRAME_WIDTH : integer := 640;
-		NUM_BYTES : integer := 2;
+		NUM_BYTES : integer := 4;
 		ADDRESS_WIDTH : integer := 22
 	);
 	port
@@ -21,7 +21,7 @@ entity read_interface is
 		valid : in std_logic;
 		v_sync : in std_logic;
 		read_address : out std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-		read_data : in std_logic_vector(15 downto 0);
+		read_data : in std_logic_vector(NUM_BYTES*8-1 downto 0);
 		data_out : out std_logic_vector(2 downto 0)
  	);
 end read_interface;
@@ -46,7 +46,7 @@ begin
 
 
 	
-	calculated_address <= "000" & std_logic_vector( to_unsigned(FRAME_WIDTH,10) * unsigned(ypos) + unsigned(xpos) );
+	calculated_address <= (calculated_address'length -1  downto 19 => '0') & std_logic_vector( to_unsigned(FRAME_WIDTH,10) * unsigned(ypos) + unsigned(xpos) );
 	
 	
 	local_address <= calculated_address(LA_BITS-1 downto 0);

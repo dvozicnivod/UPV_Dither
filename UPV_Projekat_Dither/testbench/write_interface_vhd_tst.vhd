@@ -37,17 +37,22 @@ ARCHITECTURE write_interface_arch OF write_interface_vhd_tst IS
 SIGNAL address_out : STD_LOGIC_VECTOR(18 DOWNTO 0);
 SIGNAL clk : STD_LOGIC := '1';
 SIGNAL data_in : STD_LOGIC_VECTOR(2 DOWNTO 0);
-SIGNAL data_out : STD_LOGIC_VECTOR(63 DOWNTO 0);
+SIGNAL data_out : STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL reset : STD_LOGIC;
 SIGNAL valid : STD_LOGIC;
 SIGNAL xpos : STD_LOGIC_VECTOR(9 DOWNTO 0);
 SIGNAL ypos : STD_LOGIC_VECTOR(8 DOWNTO 0);
 COMPONENT write_interface
+	generic
+	(
+		FRAME_WIDTH : integer := 32;
+		NUM_BYTES : integer := 4
+	);
 	PORT (
 	address_out : OUT STD_LOGIC_VECTOR(18 DOWNTO 0);
 	clk : IN STD_LOGIC;
 	data_in : IN STD_LOGIC_VECTOR(2 DOWNTO 0);
-	data_out : OUT STD_LOGIC_VECTOR(63 DOWNTO 0);
+	data_out : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
 	reset : IN STD_LOGIC;
 	valid : IN STD_LOGIC;
 	xpos : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
@@ -56,6 +61,11 @@ COMPONENT write_interface
 END COMPONENT;
 BEGIN
 	i1 : write_interface
+	generic map
+	(
+		FRAME_WIDTH => 32,
+		NUM_BYTES => 4
+	)
 	PORT MAP (
 -- list connections between master ports and signals
 	address_out => address_out,
@@ -548,6 +558,1140 @@ BEGIN
 	wait for 10 ns;
 	
 	ypos <= std_logic_vector(to_unsigned(2,9));
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(0,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(1,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(2,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(3,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(4,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(5,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(6,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(7,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(8,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(9,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(10,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(11,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(12,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(13,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(14,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(15,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(16,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(17,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(18,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(19,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(20,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(21,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(22,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(23,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(24,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(25,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(26,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(27,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(28,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(29,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(30,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(31,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+	
+	ypos <= std_logic_vector(to_unsigned(3,9));
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(0,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(1,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(2,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(3,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(4,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(5,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(6,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(7,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(8,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(9,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(10,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(11,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(12,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(13,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(14,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(15,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(16,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(17,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(18,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(19,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(20,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(21,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(22,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(23,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(24,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(25,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(26,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(27,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(28,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(29,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(30,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(31,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+	
+	valid <= '0';
+	wait for 100 ns;
+	
+		
+	ypos <= std_logic_vector(to_unsigned(0,9));
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(0,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(1,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(2,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(3,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(4,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(5,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(6,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(7,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(8,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(9,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(10,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(11,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(12,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(13,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(14,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(15,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(16,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(17,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(18,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(19,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(20,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(21,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(22,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(23,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(24,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(25,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(26,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(27,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(28,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(29,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(30,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(31,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+	
+	ypos <= std_logic_vector(to_unsigned(1,9));
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(0,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(1,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(2,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(3,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(4,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(5,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(6,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(7,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(8,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(9,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(10,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(11,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(12,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(13,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(14,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(15,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(16,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(17,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(18,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(19,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(20,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(21,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(22,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(23,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(24,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(25,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(26,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(27,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(28,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(29,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(30,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(31,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+	
+	ypos <= std_logic_vector(to_unsigned(2,9));
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(0,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(1,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(2,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(3,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(4,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(5,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(6,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(7,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(8,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(9,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(10,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(11,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(12,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(13,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(14,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(15,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(16,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(17,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(18,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(19,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(20,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(21,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(22,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(23,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(1,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(24,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(2,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(25,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(3,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(26,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(4,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(27,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(5,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(28,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(6,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(29,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(7,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(30,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+
+	data_in <= std_logic_vector(to_unsigned(0,3));
+	valid <= '1';
+	xpos <= std_logic_vector(to_unsigned(31,10)); 
+	wait for 10 ns;
+	valid <= '0';
+	wait for 10 ns;
+	
+	ypos <= std_logic_vector(to_unsigned(3,9));
 
 	data_in <= std_logic_vector(to_unsigned(1,3));
 	valid <= '1';
