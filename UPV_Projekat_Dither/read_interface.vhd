@@ -10,7 +10,7 @@ entity read_interface is
 	(
 		FRAME_WIDTH : integer := 640;
 		NUM_BYTES : integer := 4;
-		ADDRESS_WIDTH : integer := 22
+	constant ADDRESS_WIDTH : integer := 19
 	);
 	port
 	(

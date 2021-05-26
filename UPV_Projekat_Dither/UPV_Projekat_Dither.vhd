@@ -6,10 +6,6 @@ entity UPV_Projekat_Dither is
 
 	port
 	(
-		button	: in std_logic_vector(3 downto 0);
-		test1: out std_logic;		--TODO   test1 used as TX for MSP UART pin 127
-		test2: out std_logic;	--TODO EXTREME , smer bio IN dok se citao btn za uart, sada 125
-		--TODO   test2 used as BUTTON for test pin 88, used to be   125
 		clk_50 : in std_logic;		
 		reset_n : in std_logic;	
 		pclk :in std_logic;
@@ -42,7 +38,6 @@ entity UPV_Projekat_Dither is
 	);
 end UPV_Projekat_Dither;
 
-
 architecture struct of UPV_Projekat_Dither is
 
 constant CAM_WIDTH : integer := 640;
@@ -70,7 +65,7 @@ component cam_read is
 		valid: out std_logic := '0';
 		x	:out std_logic_vector (9 downto 0);
 		y 	:out std_logic_vector (8 downto 0);
-		href_out : out std_logic;
+		href_out : out std_logic
 	);
 end component;
 
@@ -124,7 +119,7 @@ component write_interface is
  	);
 end component;
 
-component SDRAM_control_synced is
+component SDRAM_control_B4 is
 	generic
 	(
 		SETUP_CYCLES:integer := 32768	--How many cycles to wait before starting initialization
@@ -137,7 +132,7 @@ component SDRAM_control_synced is
 		--Control signals
 		a_write, a_read : in std_logic_vector(21 downto 0);
 		d_write	:	in std_logic_vector(63 downto 0);
-		d_read	:	out std_logic_vector(63 downto 0) := (others => '1');
+		d_read	:	out std_logic_vector(63 downto 0);
 		--Status signals
 		w_complete	: out std_logic;
 		r_complete	: out std_logic;
@@ -156,9 +151,9 @@ end component;
 component read_interface is
 	generic
 	(
-		FRAME_WIDTH : integer := 640;
-		NUM_BYTES : integer := 2;
-		ADDRESS_WIDTH : integer := 22
+		FRAME_WIDTH : integer := CAM_WIDTH;
+		NUM_BYTES : integer := 8;
+		ADDRESS_WIDTH : integer := 19
 	);
 	port
 	(
@@ -169,7 +164,7 @@ component read_interface is
 		valid : in std_logic;
 		v_sync : in std_logic;
 		read_address : out std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-		read_data : in std_logic_vector(15 downto 0);
+		read_data : in std_logic_vector(63 downto 0);
 		data_out : out std_logic_vector(2 downto 0)
  	);
 end component;
@@ -215,8 +210,6 @@ component frame_sync is
 	);
 end component;
 
-BEGIN
-
 --Internal reset signal
 signal reset : std_logic;
 --Internal clocks
@@ -235,16 +228,20 @@ signal dither_valid : std_logic;
 signal sd_adr_rd, sd_adr_wr: std_logic_vector(21 downto 0);
 signal sd_data_rd, sd_data_wr: std_logic_vector(63 downto 0);
 --VGA internal signals
+signal vga_x_int : integer range 0 to CAM_WIDTH-1;
+signal vga_y_int : integer range 0 to CAM_HEIGHT-1;
 signal vga_x : std_logic_vector(9 downto 0);
 signal vga_y : std_logic_vector(8 downto 0);
 signal vga_valid, vga_vsync_int : std_logic;
 signal vga_data : std_logic_vector(2 downto 0);
 
+BEGIN
+
 
 reset <= not reset_n;
 
  pll_inst:pll
-	port
+	port map
 	(
 		inclk0 	=> clk_50,
 		c0 		=> clk_vga,
@@ -317,11 +314,11 @@ clk_sdram <= clk_sdram_int;
 		data_in	=> dither_out,
 		xpos	=> dither_x,
 		ypos	=> dither_y,
-		address_out	=> sd_adr_wr(19 downto 0),
+		address_out	=> sd_adr_wr(18 downto 0),
 		data_out 	=> sd_data_wr
  	);
 
- SDRAM_control_synced_inst:SDRAM_control_synced
+ SDRAM_control_B4_inst:SDRAM_control_B4
 	generic map
 	(
 		SETUP_CYCLES	=> 32768	--How many cycles to wait before starting initialization
@@ -352,7 +349,7 @@ clk_sdram <= clk_sdram_int;
 	(
 		FRAME_WIDTH	=> CAM_HEIGHT,
 		NUM_BYTES	=> 8,
-		ADDRESS_WIDTH	=> 22
+		ADDRESS_WIDTH	=> 19
 	)
 	port map
 	(
@@ -362,7 +359,7 @@ clk_sdram <= clk_sdram_int;
 		ypos	=> vga_y,
 		valid  	=> vga_valid,
 		v_sync	=> vga_vsync_int, 
-		read_address=> sd_adr_rd(19 downto 0),
+		read_address=> sd_adr_rd(18 downto 0),
 		read_data  	=> sd_data_rd,
 		data_out  	=> vga_data
  	);
@@ -370,7 +367,7 @@ clk_sdram <= clk_sdram_int;
 	vga_vsync <= vga_vsync_int;
 
  vga_sync_subframe_inst:vga_sync_subframe
-	generic (
+	generic map(
 		H_SYNC => 136,		
 		H_BP => 160,	
 		H_FP => 24,
@@ -382,15 +379,15 @@ clk_sdram <= clk_sdram_int;
 		H_ACTIVE_DISP => CAM_HEIGHT,
 		V_ACTIVE_DISP => CAM_WIDTH
 	)
-	port (
+	port map(
 		clk		=> clk_vga,
 		reset	=> reset,
 		hsync	=> vga_hsync,
-		vsync	=> vga_vsync,
+		vsync	=> vga_vsync_int,
 		sync_n	=> open,
 		blank_n	=> open,
-		xpos	=> vga_x,
-		ypos	=> vga_y,
+		xpos	=> vga_x_int,
+		ypos	=> vga_y_int,
 		valid	=> vga_valid,
 		Rin		=> vga_data(2),
 		Gin 	=> vga_data(1), 
@@ -399,6 +396,9 @@ clk_sdram <= clk_sdram_int;
 		Gout 	=> vga_g, 
 		Bout 	=> vga_b
 	);
+
+  vga_x <= std_logic_vector(to_unsigned(vga_x_int,10));
+  vga_y <= std_logic_vector(to_unsigned(vga_y_int,9));
 
  frame_sync_inst:frame_sync
 	port map (
@@ -410,19 +410,8 @@ clk_sdram <= clk_sdram_int;
 		frame_read	=> sd_adr_rd(21 downto 20)
 	);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+	sd_adr_wr(19) <= '0';
+	sd_adr_rd(19) <= '0';
 
 
 END struct;

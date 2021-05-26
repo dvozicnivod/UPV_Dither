@@ -36,7 +36,7 @@ ARCHITECTURE read_interface_arch OF read_interface_vhd_tst IS
 -- signals                                                   
 SIGNAL clk : STD_LOGIC := '1';
 SIGNAL data_out : STD_LOGIC_VECTOR(2 DOWNTO 0);
-SIGNAL read_address : STD_LOGIC_VECTOR(21 DOWNTO 0);
+SIGNAL read_address : STD_LOGIC_VECTOR(18 DOWNTO 0);
 SIGNAL read_data : STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL reset : STD_LOGIC;
 SIGNAL v_sync : STD_LOGIC;
@@ -48,7 +48,7 @@ COMPONENT read_interface
 	(
 		FRAME_WIDTH : integer := 640;
 		NUM_BYTES : integer := 4;
-		ADDRESS_WIDTH : integer := 22
+		ADDRESS_WIDTH : integer := 19
 	);
 	port
 	(
@@ -69,7 +69,7 @@ BEGIN
  	(
 		FRAME_WIDTH => 32,
 		NUM_BYTES => 4,
-		ADDRESS_WIDTH => 22
+		ADDRESS_WIDTH => 19
 	)
 	PORT MAP (
 -- list connections between master ports and signals
