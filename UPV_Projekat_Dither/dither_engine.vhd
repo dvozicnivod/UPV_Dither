@@ -42,7 +42,7 @@ use ieee.numeric_std.all;
 entity dither_engine is
 	generic
 	(
-		CAM_WIDTH : integer := 8
+		CAM_WIDTH : integer := 640
 	);
 	port 
 	(

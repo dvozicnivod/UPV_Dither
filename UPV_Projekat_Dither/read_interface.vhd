@@ -35,10 +35,11 @@ architecture read_interface_arch of read_interface is
 	signal current_state, next_state : state_type;
 	signal data_cnt, next_data_cnt : unsigned(5 downto 0); 
 	signal data_buffer, next_data_buffer : std_logic_vector(NUM_BYTES*8-1 downto 0);
-	signal serving_address, next_serving_address, calculated_address : std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+	signal serving_address, next_serving_address : std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+--	signal calculated_address : std_logic_vector(ADDRESS_WIDTH-1 downto 0);
 	signal tmp_data_out, next_data_out : std_logic_vector(2 downto 0);
-	signal local_address : std_logic_vector(LA_BITS-1 downto 0);
-	signal ram_address : std_logic_vector(ADDRESS_WIDTH-1 downto 2);
+--	signal local_address : std_logic_vector(LA_BITS-1 downto 0);
+--	signal ram_address : std_logic_vector(ADDRESS_WIDTH-1 downto 2);
 	signal tmp_read_address, next_read_address : unsigned(ADDRESS_WIDTH-1 downto 0);
 	
 begin
@@ -46,11 +47,11 @@ begin
 
 
 	
-	calculated_address <= (calculated_address'length -1  downto 19 => '0') & std_logic_vector( to_unsigned(FRAME_WIDTH,10) * unsigned(ypos) + unsigned(xpos) );
+--	calculated_address <= std_logic_vector( to_unsigned(FRAME_WIDTH,10) * unsigned(ypos) + unsigned(xpos) );
 	
 	
-	local_address <= calculated_address(LA_BITS-1 downto 0);
-	ram_address <= calculated_address(ADDRESS_WIDTH-1 downto 2); --MORA DA SE PROVERI STA ZNACI ADRESIRANJE U 16 bitnom modu!!! 
+--	local_address <= calculated_address(LA_BITS-1 downto 0);
+--	ram_address <= calculated_address(ADDRESS_WIDTH-1 downto 2); --MORA DA SE PROVERI STA ZNACI ADRESIRANJE U 16 bitnom modu!!! 
 	
 	
 	
@@ -63,7 +64,7 @@ begin
 --
 --
 next_state_logic:
-	process (current_state, data_cnt, data_buffer, serving_address, tmp_data_out, v_sync, valid, local_address, tmp_read_address, read_data) is
+	process (current_state, data_cnt, data_buffer, serving_address, tmp_data_out, v_sync, valid, tmp_read_address, read_data) is
 	begin
 		next_state <= current_state;
 		next_data_cnt <= data_cnt;
@@ -122,7 +123,7 @@ state_transition:
 		if (reset = '1') then
 			current_state <= WAIT_ROW;
 			data_cnt <= to_unsigned(0,6);			--DON'T CARE
-			data_buffer <= next_data_buffer;
+			data_buffer <= (others => '0');
 			serving_address <= std_logic_vector(to_unsigned(0,ADDRESS_WIDTH)); --DON'T CARE
 			tmp_read_address <= (others => '0');
 			tmp_data_out <= (others => '0');

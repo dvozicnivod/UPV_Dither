@@ -54,7 +54,7 @@ architecture SDRAM_control_arch of SDRAM_control_B4 is
 	signal current_state, next_state : state_type := INIT;
 	signal p_a_read, p_a_write : std_logic_vector(21 downto 0) := (others => '0');
 	signal a_sdram_l :std_logic_vector(13 downto 0) := (others => '1');
-	signal read_req, write_req, read_req_l, write_req_l, done, cs_n_l, ras_n_l, cas_n_l, dqmh_l, dqml_l, we_n_l: std_logic;
+	signal read_req, write_req, cs_n_l, ras_n_l, cas_n_l, dqmh_l, dqml_l, we_n_l: std_logic;
 	signal d_sdram_l, q_sdram_l :std_logic_vector(15 downto 0);
 begin
 
@@ -64,12 +64,13 @@ begin
 	w_complete <= not write_req;
 	r_complete <= not read_req;
 	
-	done <= '1' when ((current_state = IDLE) or (current_state = REFRESH_CYCLE)) else '0';
+--	done <= '1' when ((current_state = IDLE) or (current_state = REFRESH_CYCLE)) else '0';
 	
 
 next_state_logic:
 	process (current_state, write_req, read_req, init_cnt, state_cnt) is
 	begin
+		next_init_cnt <= 0;
 		case (current_state) is
 			when INIT =>
 				next_state_cnt <= 0;
@@ -119,8 +120,8 @@ state_transition:
 			state_cnt <= 0;
 			init_cnt <= 0;
 		elsif (falling_edge(clk)) then
-			read_req_l <= read_req;
-			write_req_l <= write_req;
+--			read_req_l <= read_req;
+--			write_req_l <= write_req;
 			current_state <= next_state;
 			state_cnt <= next_state_cnt;
 			init_cnt <= next_init_cnt;
@@ -171,7 +172,7 @@ Q_latch_process:
 	
 --Made according to current state and then latched to output on falling edge of same state!
 output_logic:
-	process(current_state, state_cnt, init_cnt, a_read, a_write, d_write, next_state_cnt, next_init_cnt) is
+	process(current_state, state_cnt, init_cnt, a_read, a_write, d_write, next_state, next_state_cnt, next_init_cnt) is
 	begin
 		cs_n_l <= '1';
 		ras_n_l <= '1';
