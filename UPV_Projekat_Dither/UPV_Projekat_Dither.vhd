@@ -358,7 +358,7 @@ clk_sdram <= clk_sdram_int;
 		xpos	=> vga_x,
 		ypos	=> vga_y,
 		valid  	=> vga_valid,
-		v_sync	=> vga_vsync_int, 
+		v_sync	=> not vga_vsync_int, 
 		read_address=> sd_adr_rd(18 downto 0),
 		read_data  	=> sd_data_rd,
 		data_out  	=> vga_data
@@ -376,8 +376,8 @@ clk_sdram <= clk_sdram_int;
 		V_BP => 29,	
 		V_FP => 3,
 		V_DISPLAY => 768,
-		H_ACTIVE_DISP => CAM_HEIGHT,
-		V_ACTIVE_DISP => CAM_WIDTH
+		H_ACTIVE_DISP => CAM_WIDTH,
+		V_ACTIVE_DISP => CAM_HEIGHT
 	)
 	port map(
 		clk		=> clk_vga,
@@ -405,7 +405,7 @@ clk_sdram <= clk_sdram_int;
 		clk  	=> clk_sdram_int,
 		reset  	=> reset,
 		vsync_cam	=> cam_vsync,
-		vsync_vga  	=> vga_vsync_int,
+		vsync_vga  	=> not vga_vsync_int,
 		frame_write	=> sd_adr_wr(21 downto 20),
 		frame_read	=> sd_adr_rd(21 downto 20)
 	);

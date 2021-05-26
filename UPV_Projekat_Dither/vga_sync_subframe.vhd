@@ -87,7 +87,7 @@ begin
 			end if;
 			
 			-- set pixel coordinates
-			if (h_count < H_DISPLAY + X_OFFSET and h_count >= X_OFFSET and v_count < V_DISPLAY + Y_OFFSET and v_count >= Y_OFFSET) then
+			if (h_count < H_ACTIVE_DISP + X_OFFSET and h_count >= X_OFFSET and v_count < V_ACTIVE_DISP + Y_OFFSET and v_count >= Y_OFFSET) then
 				xpos <= h_count - X_OFFSET;
 				ypos <= v_count - Y_OFFSET;
 				valid <= '1';
