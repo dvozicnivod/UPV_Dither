@@ -55,7 +55,8 @@ architecture SDRAM_control_arch of SDRAM_control_B4 is
 	signal p_a_read, p_a_write : std_logic_vector(21 downto 0) := (others => '0');
 	signal a_sdram_l :std_logic_vector(13 downto 0) := (others => '1');
 	signal read_req, write_req, cs_n_l, ras_n_l, cas_n_l, dqmh_l, dqml_l, we_n_l: std_logic;
-	signal d_sdram_l, q_sdram_l :std_logic_vector(15 downto 0);
+	signal d_sdram_l, q_sdram_l, d_sdram :std_logic_vector(15 downto 0);
+	signal output_en, next_output_en : std_logic;
 begin
 
 	clk_en <= '1';
@@ -181,7 +182,8 @@ output_logic:
 		dqml_l <= '1';
 		a_sdram_l <= (others => '1');
 		we_n_l <= '1';
-		d_sdram_l <= (others => 'Z');
+		d_sdram_l <= (others => '0');
+		next_output_en <= '0';
 		case (next_state) is
 			when INIT =>
 				case (next_init_cnt) is
@@ -252,18 +254,22 @@ output_logic:
 						dqmh_l <= '0';
 						dqml_l <= '0';
 						d_sdram_l <= d_write(15 downto 0);
+						next_output_en <= '1';
 					when 4 =>
 						dqmh_l <= '0';			--BURST 2/4
 						dqml_l <= '0';
 						d_sdram_l <= d_write(31 downto 16);
+						next_output_en <= '1';
 					when 5 =>
 						dqmh_l <= '0';			--BURST 3/4
 						dqml_l <= '0';
 						d_sdram_l <= d_write(47 downto 32);
+						next_output_en <= '1';
 					when 6 =>
 						dqmh_l <= '0';			--BURST 4/4
 						dqml_l <= '0';
 						d_sdram_l <= d_write(63 downto 48);
+						next_output_en <= '1';
 					when others =>
 				end case;
 			when REFRESH_CYCLE =>
@@ -291,7 +297,8 @@ output_latch_process:
 			dqml <= '1';
 			a_sdram <= (others => '1');
 			we_n <= '1';
-			dq_sdram <= (others => 'Z');
+			d_sdram <= (others => '0');
+			output_en <= '0';
 		elsif (falling_edge(clk)) then
 			cs_n 	<= cs_n_l;
 			ras_n <= ras_n_l;
@@ -300,9 +307,12 @@ output_latch_process:
 			dqml <= dqml_l;
 			a_sdram <= a_sdram_l;
 			we_n 	<= we_n_l;	
-			dq_sdram <= d_sdram_l;
+			d_sdram <= d_sdram_l;
+			output_en <= next_output_en;
 		end if;
 	end process;
+	
+dq_sdram <= d_sdram when (output_en = '1') else (others => 'Z');	
 	
 input_latch_process:
 	process (reset, clk)
