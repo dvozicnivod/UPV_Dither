@@ -34,7 +34,8 @@ entity UPV_Projekat_Dither is
 		vga_vsync : out std_logic;
 		vga_r : out std_logic;	
 		vga_g : out std_logic;	
-		vga_b : out std_logic
+		vga_b : out std_logic;
+		button : in std_logic_vector(3 downto 0)
 	);
 end UPV_Projekat_Dither;
 
@@ -255,7 +256,7 @@ clk_sdram <= clk_sdram_int;
  cam_read_inst:cam_read
 	port map
 	(
-		reset 	=> reset,
+		reset 	=> (reset or (not button(0))),
 		Pclk	=> pclk,
 		Href	=> cam_href,
 		Vsync	=> cam_vsync,
@@ -309,7 +310,7 @@ clk_sdram <= clk_sdram_int;
 	port map
 	(
 		clk		=> pclk,
-		reset	=> reset,
+		reset	=> (reset or (not button(1))),
 		valid 	=> dither_valid,
 		data_in	=> dither_out,
 		xpos	=> dither_x,
@@ -325,7 +326,7 @@ clk_sdram <= clk_sdram_int;
 	)
 	port map
 	(
-		reset	=> reset,
+		reset	=> (reset or (not button(3))),
 		clk		=> clk_sdram_int,
 		a_write	=> sd_adr_wr, 
 		a_read	=> sd_adr_rd,
@@ -354,7 +355,7 @@ clk_sdram <= clk_sdram_int;
 	port map
 	(
 		clk		=> clk_vga,
-		reset	=> reset,
+		reset	=> (reset or (not button(2))),
 		xpos	=> vga_x,
 		ypos	=> vga_y,
 		valid  	=> vga_valid,
