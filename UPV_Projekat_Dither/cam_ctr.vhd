@@ -17,7 +17,7 @@ end cam_ctr;
 architecture cam_ctr_arch of cam_ctr is
 	type state_type is ( SETTLE, IDLE, STARTBIT1, STARTBIT2, DATABIT, CUP, CDOWN, STOPBIT1, STOPBIT2);
 	constant COUNT_TO : integer :=1000;
-	signal count : integer range 0 to COUNT_TO := 0;
+	signal count : integer range 0 to COUNT_TO+1 := 0;
 	signal current_state, next_state : state_type := SETTLE;
 	signal cmds_left : integer range 0 to 4 := 4;
 	signal bits_left : integer range 0 to 27 := 0;

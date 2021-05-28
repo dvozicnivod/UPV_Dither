@@ -24,8 +24,8 @@ architecture cam_read_arch of cam_read is
 	
 	signal current_state, next_state : state_type := WAIT_FRAME;
 	signal data_delayed : std_logic_vector (7 downto 0) := (others => '0');
-	signal x_buf	: integer range 0 to 639 := 0;
-	signal y_buf : integer range 0 to 479 := 0;
+	signal x_buf	: integer range 0 to 640 := 0;
+	signal y_buf : integer range 0 to 480 := 0;
 	signal R_buf,G_buf,B_buf	: std_logic_vector (4 downto 0) := (others => '0');
 
 begin

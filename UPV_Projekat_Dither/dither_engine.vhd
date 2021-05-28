@@ -197,6 +197,7 @@ next_state_logic:
 					end if;
 				else
 					next_dither_out <= current_dithered_b & current_dithered_g & current_dithered_r;
+					next_valid <= '1';
 					next_xpos_out <= i;
 					next_ypos_out <= j;
 					next_state <= PRELOAD_1;

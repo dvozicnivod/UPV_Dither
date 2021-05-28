@@ -27,7 +27,7 @@ next_state_process:
 			next_frame_write <= std_logic_vector(unsigned(tmp_frame_write) + 1);
 		end if;
 		if (vsync_vga_l1 = '1' and vsync_vga_l2 = '0') then 	--Rising edge
-			next_frame_read <= std_logic_vector(unsigned(tmp_frame_read) - 1);
+			next_frame_read <= std_logic_vector(unsigned(tmp_frame_write) - 1);
 		end if;
 	end process;
 
