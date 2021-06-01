@@ -56,7 +56,7 @@ architecture SDRAM_control_arch of SDRAM_control_B4_fifo is
 	end component;
 	
 	constant MAX_USEDW : integer := 64;
-	constant SETUP_CYCLES:integer := 32768;
+	constant SETUP_CYCLES:integer := 5; --32768;
 	constant INIT_CYCLES :integer :=  SETUP_CYCLES + 2 + 8*8 + 2;
 	
 	type state_type is ( IDLE, INIT, READ_CYCLE, WRITE_CYCLE, REFRESH_CYCLE );
@@ -96,48 +96,52 @@ fifo_machine_next_state: process (read_state, write_state, d_write, a_write, fif
 			next_a_read <= a_read;
 			next_fifo_read_wrreq <= '0';
 			
-			case (write_state) is
-				when WAIT_DATA =>
-					if (wr_reset = '1') then
-						next_a_write <= (others => '1');
+			if (wr_reset = '1') then
+				next_a_write <= std_logic_vector(to_unsigned(2**22-4,22));
+				next_write_state <= WAIT_DATA;
+			else
+				case (write_state) is
+					when WAIT_DATA =>
+						if (w_busy = '0' and unsigned(fifo_write_usedw) > 0) then
+							next_write_state <= LATCH_DATA;
+							next_d_write <= fifo_write_q;
+							next_a_write <= std_logic_vector(unsigned(a_write) + 4);
+							next_fifo_write_rdreq <= '1';
+						else
+							next_write_state <= WAIT_DATA;
+						end if;
+					when LATCH_DATA =>
 						next_write_state <= WAIT_DATA;
-					elsif (w_busy = '0' and unsigned(fifo_write_usedw) > 0) then
-						next_write_state <= LATCH_DATA;
-						next_d_write <= fifo_write_q;
-						next_a_write <= std_logic_vector(unsigned(a_write) + 1);
-						next_fifo_write_rdreq <= '1';
-					else
-						next_write_state <= WAIT_DATA;
-					end if;
-				when LATCH_DATA =>
-					next_write_state <= WAIT_DATA;
-			end case;
+				end case;
+			end if;
 			
-			case (read_state) is
-				when WAIT_DATA =>
-					if (rd_reset = '1') then
-						next_a_read <= (others => '1');
-						next_read_state <= WAIT_DATA;
-					elsif (r_busy = '0' and unsigned(fifo_read_usedw) < MAX_USEDW - 1) then
-						next_read_state <= LATCH_DATA;
-						next_a_read <= std_logic_vector(unsigned(a_read) + 1);
-					else
-						next_read_state <= WAIT_DATA;
-					end if;
-				when LATCH_DATA =>
-					if (r_busy = '1') then
-						next_read_state <= LATCH_DATA;
-					else
-						next_fifo_read_data <= d_read;
-						next_fifo_read_wrreq <= '1';
-						if ( unsigned(fifo_read_usedw) < MAX_USEDW - 2) then
-							next_read_state <= LATCH_DATA; --RELATCH with 0 delay
-							next_a_read <= std_logic_vector(unsigned(a_read) + 1);
+			if (rd_reset = '1') then
+				next_a_read <=  std_logic_vector(to_unsigned(2**22-4,22));
+				next_read_state <= WAIT_DATA;
+			else
+				case (read_state) is
+					when WAIT_DATA =>
+						if (r_busy = '0' and unsigned(fifo_read_usedw) < MAX_USEDW - 1) then
+							next_read_state <= LATCH_DATA;
+							next_a_read <= std_logic_vector(unsigned(a_read) + 4);
 						else
 							next_read_state <= WAIT_DATA;
 						end if;
-					end if;
-			end case;
+					when LATCH_DATA =>
+						if (r_busy = '1') then
+							next_read_state <= LATCH_DATA;
+						else
+							next_fifo_read_data <= d_read;
+							next_fifo_read_wrreq <= '1';
+							if ( unsigned(fifo_read_usedw) < MAX_USEDW - 2) then
+								next_read_state <= LATCH_DATA; --RELATCH with 0 delay
+								next_a_read <= std_logic_vector(unsigned(a_read) + 4);
+							else
+								next_read_state <= WAIT_DATA;
+							end if;
+						end if;
+				end case;
+			end if;
 	end process;
 	
 	fifo_transition_process:process (reset, clk) is
@@ -150,7 +154,7 @@ fifo_machine_next_state: process (read_state, write_state, d_write, a_write, fif
 			a_read <= (others => '1');
 			fifo_read_wrreq <= '0';
 			fifo_write_rdreq <= '0';
-			fifo_read_data <= (others => '1');
+			fifo_read_data <= (others => '0');
 		elsif (rising_edge(clk)) then
 			read_state <= next_read_state;
 			write_state <= next_write_state;
@@ -199,8 +203,8 @@ read_fifo_inst:sdram_fifo
 	clk_en <= '1';
 	read_req <= '0' when (a_read = p_a_read) else '1';
 	write_req <= '0' when (a_write = p_a_write) else '1';
-	w_busy <= not write_req;
-	r_busy <= not read_req;
+	w_busy <= '1' when write_req = '1' or current_state = INIT else '0';
+	r_busy <= '1' when read_req = '1' or current_state = INIT else '0';
 	
 --	done <= '1' when ((current_state = IDLE) or (current_state = REFRESH_CYCLE)) else '0';
 	
