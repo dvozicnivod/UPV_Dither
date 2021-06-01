@@ -224,6 +224,8 @@ signal vga_x : std_logic_vector(9 downto 0);
 signal vga_y : std_logic_vector(8 downto 0);
 signal vga_valid, vga_vsync_int : std_logic;
 signal vga_data : std_logic_vector(2 downto 0);
+--Debug signals
+signal vga_r_int, vga_g_int, vga_b_int, vga_all: std_logic;
 
 BEGIN
 
@@ -245,7 +247,7 @@ clk_sdram <= clk_sdram_int;
  cam_read_inst:cam_read
 	port map
 	(
-		reset 	=> (reset or (not button(0))),
+		reset 	=> reset,
 		Pclk	=> pclk,
 		Href	=> cam_href,
 		Vsync	=> cam_vsync,
@@ -276,7 +278,7 @@ clk_sdram <= clk_sdram_int;
 	)
 	port map 
 	(
-		reset	=> reset,
+		reset	=> (reset  or (not button(3))),
 		clk	 	=> pclk,
 		valid	=> cam_read_valid,
 		v_sync	=> cam_vsync,
@@ -289,6 +291,8 @@ clk_sdram <= clk_sdram_int;
 		ypos_out  	=> dither_y,
 		valid_out  	=> dither_valid
 	);
+	
+	--dither_out <= button(2 downto 0);
 
 write_interface_inst: write_interface
 	generic map
@@ -334,6 +338,8 @@ SDRAM_control_inst: SDRAM_control_B4_fifo
 		clk_en		=> sd_cen
 	);
 
+	--sd_data_wr <= "0111011101000100001000100001000101110111010001000010001000010001";
+	
 read_interface_inst: read_interface
 	generic map
 	(
@@ -375,29 +381,22 @@ read_interface_inst: read_interface
 		xpos	=> vga_x_int,
 		ypos	=> vga_y_int,
 		valid	=> vga_valid,
-		Rin		=> vga_data(0),
+		Rin		=> vga_data(2),
 		Gin 	=> vga_data(1), 
-		Bin 	=> vga_data(2),
-		Rout 	=> vga_r, 
-		Gout 	=> vga_g, 
-		Bout 	=> vga_b
+		Bin 	=> vga_data(0),
+		Rout 	=> vga_r_int, 
+		Gout 	=> vga_g_int, 
+		Bout 	=> vga_b_int
 	);
+	
+	vga_r <= vga_r_int;
+	vga_g <= vga_g_int;
+	vga_b <= vga_b_int;
 
-  vga_x <= std_logic_vector(to_unsigned(vga_x_int,10));
-  vga_y <= std_logic_vector(to_unsigned(vga_y_int,9));
 
- frame_sync_inst:frame_sync
-	port map (
-		clk  	=> clk_sdram_int,
-		reset  	=> reset,
-		vsync_cam	=> cam_vsync,
-		vsync_vga  	=> not vga_vsync_int,
-		frame_write	=> sd_adr_wr(21 downto 20),
-		frame_read	=> sd_adr_rd(21 downto 20)
-	);
+  vga_x <= std_logic_vector(to_unsigned(vga_x_int, 10));
+  vga_y <= std_logic_vector(to_unsigned(vga_y_int, 9));
 
-	sd_adr_wr(19) <= '0';
-	sd_adr_rd(19) <= '0';
 
 
 END struct;

@@ -19,16 +19,18 @@ architecture cam_ctr_arch of cam_ctr is
 	constant COUNT_TO : integer :=1000;
 	signal count : integer range 0 to COUNT_TO+1 := 0;
 	signal current_state, next_state : state_type := SETTLE;
-	signal cmds_left : integer range 0 to 4 := 4;
+	signal cmds_left : integer range 0 to 5 := 5;
 	signal bits_left : integer range 0 to 27 := 0;
 	signal data_out : std_logic_vector (26 downto 0) := (others => '0');
 	
 	constant CAMERA_ID : std_logic_vector (7 downto 0) := X"42";
 	constant COM7_ADR : std_logic_vector (7 downto 0) := X"12";
 	constant COM15_ADR : std_logic_vector (7 downto 0) := X"40";
+	constant RGB444_ADR : std_logic_vector (7 downto 0) := X"8C";
 	constant COM7_RESET_CMD : std_logic_vector (7 downto 0) := X"80";
 	constant COM7_RGB_CMD : std_logic_vector (7 downto 0) := X"04";
 	constant COM15_RGB555_CMD : std_logic_vector (7 downto 0) := X"F0";
+	constant RGB444_CMD : std_logic_vector (7 downto 0) := X"00";
 	
 begin
 	
@@ -75,7 +77,7 @@ state_transition:
 	begin
 		if (reset = '1') then
 			current_state <= SETTLE;
-			cmds_left <= 4;
+			cmds_left <= 5;
 			bits_left <= 0;
 			data_out <= (others => '0');
 			count <= 0;
@@ -96,8 +98,10 @@ state_transition:
 					bits_left <= 27;
 					cmds_left <= cmds_left - 1;
 					case (cmds_left) is
-						when 4 =>
+						when 5 =>
 							data_out <= CAMERA_ID & '1' & COM7_ADR & '1' & COM7_RESET_CMD & '1';
+						when 3  =>
+							data_out <= CAMERA_ID & '1' & RGB444_ADR & '1' & RGB444_CMD & '1';
 						when 2  =>
 							data_out <= CAMERA_ID & '1' & COM7_ADR & '1' & COM7_RGB_CMD & '1';
 						when 1 =>

@@ -55,7 +55,7 @@ architecture SDRAM_control_arch of SDRAM_control_B4_fifo is
 		);
 	end component;
 	
-	constant MAX_USEDW : integer := 64;
+	constant MAX_USEDW : integer := 4;
 	constant SETUP_CYCLES:integer := 5; --32768;
 	constant INIT_CYCLES :integer :=  SETUP_CYCLES + 2 + 8*8 + 2;
 	

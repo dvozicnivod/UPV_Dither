@@ -84,9 +84,9 @@ state_transition:
 				when WAIT_ROW=> 
 					x_buf <= 0;
 				when READ_1 =>
-					R_buf <= data_delayed(6 downto 2);
-					G_buf <= data_delayed(1 downto 0) & data(7 downto 5);
-					B_buf <= data(4 downto 0);
+					R_buf <= data(6 downto 2);
+					G_buf <= data(1 downto 0) & data_delayed(7 downto 5);
+					B_buf <= data_delayed(4 downto 0);
 				when READ_2 =>
 					if (next_state = WAIT_ROW) then
 						y_buf <= y_buf + 1;

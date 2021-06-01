@@ -12,7 +12,7 @@ use IEEE.numeric_std.all;
 --after reset cannot read 0 address initially. lol, doesn't need to be perfect :)
 --FOR USE WITH 64Mbit SDRAM at 100MHz , cas 2, 2B output
 
-entity SDRAM_control_B4 is
+entity SDRAM_control_B4_fifo is
 
 	generic
 	(
@@ -34,20 +34,38 @@ entity SDRAM_control_B4 is
 		a_sdram 	: 	out std_logic_vector(13 downto 0);	--top 2 bits bank select
 		dq_sdram : 	inout std_logic_vector(15 downto 0);
 		cs_n		:	out std_logic;
-		ras_n		:	out std_logic;
+		ras_n		:	o ut std_logic;
 		cas_n 	:	out std_logic;
 		dqmh,dqml:	out std_logic;
 		we_n		:	out std_logic;
 		clk_en	:	out std_logic
 	);
-end SDRAM_control_B4;
+end SDRAM_control_B4_fifo;
 
 --TODO!!!
 
-architecture SDRAM_control_arch of SDRAM_control_B4 is
+architecture SDRAM_control_arch of SDRAM_control_B4_fifo is
+
+	component sdram_fifo is
+		port
+		(
+			aclr		: in std_logic  := '0';
+			data		: in std_logic_vector (63 downto 0);
+			rdclk		: in std_logic ;
+			rdreq		: in std_logic ;
+			wrclk		: in std_logic ;
+			wrreq		: in std_logic ;
+			q			: out std_logic_vector (63 downto 0);
+			rdusedw		: out std_logic_vector (5 downto 0);
+			wrusedw		: out std_logic_vector (5 downto 0)
+		);
+	end component;
+	
+	constant MAX_USEDW : integer := 64;
 	constant INIT_CYCLES :integer :=  SETUP_CYCLES + 2 + 8*8 + 2;
 	
 	type state_type is ( IDLE, INIT, READ_CYCLE, WRITE_CYCLE, REFRESH_CYCLE );
+	type data_machine is ( WAIT_DATA, LATCH_DATA );
 	
 	signal state_cnt, next_state_cnt : integer range 0 to 15 := 0;
 	signal init_cnt, next_init_cnt : integer range 0 to INIT_CYCLES := 0;
@@ -57,7 +75,115 @@ architecture SDRAM_control_arch of SDRAM_control_B4 is
 	signal read_req, write_req, cs_n_l, ras_n_l, cas_n_l, dqmh_l, dqml_l, we_n_l: std_logic;
 	signal d_sdram_l, q_sdram_l, d_sdram :std_logic_vector(15 downto 0);
 	signal output_en, next_output_en : std_logic;
+	
+	signal read_state, next_read_state, write_state, next_write_state : data_machine;
+	next_d_write, d_write, next_fifo_read_data, fifo_read_data
+	next_a_write, a_write, next_a_read, a_read
+	next_fifo_write_readreq, fifo_write_readreq, next_fifo_read_writereq, fifo_read_writereq
+	
+	
 begin
+
+fifo_machine_next_state: process () is
+	begin
+			next_read_state <= read_state; 
+			next_write_state <= write_state;
+			
+			next_d_write <= d_write;
+			next_a_write <= a_write;
+			next_fifo_write_readreq <= '0';
+			
+			next_fifo_read_data <= fifo_read_data;
+			next_a_read <= a_read;
+			next_fifo_read_writereq <= '0';
+			
+			case (write_state) of
+				when WAIT_DATA =>
+					if (vsync = '1') then
+						next_a_write <= (others => '1');
+						next_write_state <= WAIT_DATA;
+					elsif (write_busy = '0' and fifo_write_usedw > 0) then
+						next_write_state <= LATCH_DATA;
+						next_d_write <= fifo_write_q;
+						next_a_write <= (a_write + 1);
+						next_fifo_write_readreq <= '1';
+					else
+						next_write_state <= WAIT_DATA;
+					end if;
+				when LATCH_DATA =>
+					next_write_state <= WAIT_DATA;
+			end case;
+			
+			case (read_state) of
+				when WAIT_DATA =>
+					if (vsync = '1') then
+						next_a_read <= (others => '1');
+						next_read_state <= WAIT_DATA;
+					elsif (read_busy = '0' and to_integer(unsigned(fifo_read_usedw)) < MAX_USEDW - 1) then
+						next_read_state <= LATCH_DATA;
+						next_a_read <= (a_read + 1);
+					else
+						next_read_state <= WAIT_DATA;
+					end if;
+				when LATCH_DATA =>
+					if (read_busy = '1') then
+						next_read_state <= LATCH_DATA;
+					else
+						next_fifo_read_data <= d_read;
+						next_fifo_read_writereq <= '1';
+						if ( to_integer(unsigned(fifo_read_usedw) < MAX_USEDW - 2) then
+							next_read_state <= LATCH_DATA; --RELATCH with 0 delay
+							next_a_read <= (a_read + 1);
+						else
+							next_read_state <= WAIT_DATA;
+						end if;
+					end if;
+			end case;
+	end process;
+	
+	fifo_transition_process:process (reset, clk) is
+	begin
+		if (reset = '1') then
+			read_state <= WAIT_DATA;
+			write_state <= WAIT_DATA;
+		elsif (rising_edge(clk)) then
+			read_state <= next_read_state;
+			write_state <= next_write_state;
+		end if;
+	end process;
+
+write_fifo_inst:sdram_fifo()
+		port map
+		(
+			aclr 	=> write_fifo_clear,
+			data	=> write_d,
+			rdclk	=> clk,
+			rdreq	=> fifo_write_readrq,
+			wrclk	=> wr_clk,
+			wrreq	=> wr_req,
+			q		=> fifo_write_q,
+			rdusedw	=> fifo_write_usedw,
+			wrusedw	=> open
+		);
+		
+read_fifo_inst:sdram_fifo()
+		port map
+		(
+			aclr 	=> read_fifo_clear,
+			data	=> fifo_read_data,
+			rdclk	=> rd_clk,
+			rdreq	=> rd_req,
+			wrclk	=> clk,
+			wrreq	=> fifo_read_wrreq,
+			q		=> read_q,
+			rdusedw	=> open,
+			wrusedw	=> fifo_read_usedw
+		);
+
+	
+
+
+
 
 	clk_en <= '1';
 	read_req <= '0' when (a_read = p_a_read) else '1';
