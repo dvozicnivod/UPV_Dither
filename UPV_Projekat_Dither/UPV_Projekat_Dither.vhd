@@ -104,7 +104,6 @@ end component;
 component write_interface is
 	generic
 	(
-		FRAME_WIDTH : integer := 640;
 		NUM_BYTES : integer := 8
 	);
 	port
@@ -113,30 +112,23 @@ component write_interface is
 		reset : in std_logic;
 		valid : in std_logic;
 		data_in : in std_logic_vector(2 downto 0);
-		xpos : in std_logic_vector(9 downto 0); 
-		ypos : in std_logic_vector(8 downto 0);
-		address_out : out std_logic_vector(18 downto 0); --307200 pix -> 19 bits needed
-		data_out : out std_logic_vector(8 * NUM_BYTES - 1 downto 0)
+		data_out : out std_logic_vector(8 * NUM_BYTES - 1 downto 0);
+		wr_req : out std_logic;
+		vsync : in std_logic
  	);
 end component;
 
-component SDRAM_control_B4 is
-	generic
-	(
-		SETUP_CYCLES:integer := 32768	--How many cycles to wait before starting initialization
-	);
-	
+component SDRAM_control_B4_fifo is
 	port
 	(
 		reset 	: in	std_logic;
 		clk		: in	std_logic;
 		--Control signals
-		a_write, a_read : in std_logic_vector(21 downto 0);
-		d_write	:	in std_logic_vector(63 downto 0);
-		d_read	:	out std_logic_vector(63 downto 0);
-		--Status signals
-		w_complete	: out std_logic;
-		r_complete	: out std_logic;
+		wrclk, rdclk : in std_logic;
+		wrreq, rdreq, wr_reset, rd_reset: in std_logic;
+		write_d	:	in std_logic_vector(63 downto 0);
+		read_q	:	out std_logic_vector(63 downto 0);
+		read_usedw, write_usedw : out std_logic_vector(5 downto 0);
 		--Interface with SDRAM
 		a_sdram 	: 	out std_logic_vector(13 downto 0);	--top 2 bits bank select
 		dq_sdram : 	inout std_logic_vector(15 downto 0);
@@ -152,21 +144,17 @@ end component;
 component read_interface is
 	generic
 	(
-		FRAME_WIDTH : integer := CAM_WIDTH;
-		NUM_BYTES : integer := 8;
-		ADDRESS_WIDTH : integer := 19
+		NUM_BYTES : integer := 8
 	);
 	port
 	(
 		clk : in std_logic;
 		reset : in std_logic;
-		xpos : in std_logic_vector(9 downto 0); 
-		ypos : in std_logic_vector(8 downto 0);
 		valid : in std_logic;
-		v_sync : in std_logic;
-		read_address : out std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-		read_data : in std_logic_vector(63 downto 0);
-		data_out : out std_logic_vector(2 downto 0)
+		data_in : in std_logic_vector(8 * NUM_BYTES - 1 downto 0);
+		data_out : out std_logic_vector(2 downto 0);
+		rd_req : out std_logic;
+		vsync : in std_logic
  	);
 end component;
 
@@ -228,6 +216,7 @@ signal dither_valid : std_logic;
 --SDRAM control internal signals
 signal sd_adr_rd, sd_adr_wr: std_logic_vector(21 downto 0);
 signal sd_data_rd, sd_data_wr: std_logic_vector(63 downto 0);
+signal sd_rd_req, sd_wr_req : std_logic;
 --VGA internal signals
 signal vga_x_int : integer range 0 to CAM_WIDTH-1;
 signal vga_y_int : integer range 0 to CAM_HEIGHT-1;
@@ -301,68 +290,64 @@ clk_sdram <= clk_sdram_int;
 		valid_out  	=> dither_valid
 	);
 
- write_interface_inst:write_interface
+write_interface_inst: write_interface
 	generic map
 	(
-		FRAME_WIDTH	=> CAM_WIDTH,
-		NUM_BYTES  	=> 8		--BURST 4
+		NUM_BYTES =>  8
 	)
 	port map
 	(
-		clk		=> pclk,
-		reset	=> (reset or (not button(1))),
-		valid 	=> dither_valid,
-		data_in	=> dither_out,
-		xpos	=> dither_x,
-		ypos	=> dither_y,
-		address_out	=> sd_adr_wr(18 downto 0),
-		data_out 	=> sd_data_wr
+		clk => pclk,
+		reset => reset,
+		valid => dither_valid,
+		data_in => dither_out,
+		data_out => sd_data_wr,
+		wr_req => sd_wr_req,
+		vsync => cam_vsync
  	);
-
- SDRAM_control_B4_inst:SDRAM_control_B4
-	generic map
-	(
-		SETUP_CYCLES	=> 32768	--How many cycles to wait before starting initialization
-	)
+	
+	
+	
+SDRAM_control_inst: SDRAM_control_B4_fifo
 	port map
 	(
-		reset	=> (reset or (not button(3))),
-		clk		=> clk_sdram_int,
-		a_write	=> sd_adr_wr, 
-		a_read	=> sd_adr_rd,
-		d_write	=> sd_data_wr,
-		d_read	=> sd_data_rd,
-		w_complete	=> open,
-		r_complete	=> open,
-		a_sdram	=> sd_address,
-		dq_sdram=> sd_data,
-		cs_n 	=> sd_cs,
-		ras_n	=> sd_ras,
-		cas_n	=> sd_cas,
-		dqmh	=> sd_dqmh,
-		dqml 	=> sd_dqml,
-		we_n 	=> sd_we,
-		clk_en 	=> sd_cen
+		reset			=> reset,
+		clk			=> clk_sdram_int,
+		wrclk			=> pclk,
+		rdclk 		=> clk_vga,
+		wrreq			=> sd_wr_req,
+		rdreq			=> sd_rd_req,
+		wr_reset		=> cam_vsync,
+		rd_reset		=> not vga_vsync_int,
+		write_d		=> sd_data_wr,
+		read_q		=> sd_data_rd,
+		read_usedw	=> open,
+		write_usedw	=> open,
+		a_sdram 		=> sd_address,
+		dq_sdram 	=> sd_data,
+		cs_n			=> sd_cs,
+		ras_n			=> sd_ras,
+		cas_n 		=> sd_cas,
+		dqmh			=> sd_dqmh,
+		dqml			=> sd_dqml,
+		we_n			=> sd_we,
+		clk_en		=> sd_cen
 	);
 
- read_interface_inst:read_interface
+read_interface_inst: read_interface
 	generic map
 	(
-		FRAME_WIDTH	=> CAM_HEIGHT,
-		NUM_BYTES	=> 8,
-		ADDRESS_WIDTH	=> 19
+		NUM_BYTES => 8
 	)
 	port map
 	(
-		clk		=> clk_vga,
-		reset	=> (reset or (not button(2))),
-		xpos	=> vga_x,
-		ypos	=> vga_y,
-		valid  	=> vga_valid,
-		v_sync	=> not vga_vsync_int, 
-		read_address=> sd_adr_rd(18 downto 0),
-		read_data  	=> sd_data_rd,
-		data_out  	=> vga_data
+		clk => clk_vga,
+		reset => reset,
+		valid => vga_valid,
+		data_in => sd_data_rd,
+		data_out => vga_data,
+		rd_req => sd_rd_req,
+		vsync => not vga_vsync_int
  	);
 	
 	vga_vsync <= vga_vsync_int;

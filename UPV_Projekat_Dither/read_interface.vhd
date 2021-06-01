@@ -8,7 +8,7 @@ use IEEE.math_real.all;
 entity read_interface is
 	generic
 	(
-		NUM_BYTES : integer := 4
+		NUM_BYTES : integer := 8
 	);
 	port
 	(

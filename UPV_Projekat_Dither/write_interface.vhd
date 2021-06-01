@@ -5,8 +5,7 @@ use IEEE.numeric_std.all;
 entity write_interface is
 	generic
 	(
-		FRAME_WIDTH : integer := 640;
-		NUM_BYTES : integer := 4
+		NUM_BYTES : integer := 8
 	);
 	port
 	(
