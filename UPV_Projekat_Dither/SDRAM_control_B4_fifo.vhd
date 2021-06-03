@@ -79,11 +79,20 @@ architecture SDRAM_control_arch of SDRAM_control_B4_fifo is
 	
 	signal w_busy, r_busy : std_logic;
 	
-	
-	
+	signal rdreset_s1, rdreset_s2, wrreset_s1, wrreset_s2 : std_logic;
 begin
 
-fifo_machine_next_state: process (read_state, write_state, d_write, a_write, fifo_read_data, a_read, wr_reset, rd_reset, w_busy, r_busy, fifo_write_usedw, fifo_read_usedw, fifo_write_q, d_read) is
+vsync_synchronizer: process (clk)
+	begin
+		if (rising_edge(clk)) then
+			rdreset_s1 <= rd_reset;
+			rdreset_s2 <= rdreset_s1;
+			wrreset_s1 <= wr_reset;
+			wrreset_s2 <= wrreset_s1;
+		end if;
+	end process;
+
+fifo_machine_next_state: process (read_state, write_state, d_write, a_write, fifo_read_data, a_read, wrreset_s2, rdreset_s2, w_busy, r_busy, fifo_write_usedw, fifo_read_usedw, fifo_write_q, d_read) is
 	begin
 			next_read_state <= read_state; 
 			next_write_state <= write_state;
@@ -96,7 +105,7 @@ fifo_machine_next_state: process (read_state, write_state, d_write, a_write, fif
 			next_a_read <= a_read;
 			next_fifo_read_wrreq <= '0';
 			
-			if (wr_reset = '1') then
+			if (wrreset_s2 = '1') then
 				next_a_write <= std_logic_vector(to_unsigned(2**22-4,22));
 				next_write_state <= WAIT_DATA;
 			else
@@ -115,7 +124,7 @@ fifo_machine_next_state: process (read_state, write_state, d_write, a_write, fif
 				end case;
 			end if;
 			
-			if (rd_reset = '1') then
+			if (rdreset_s2 = '1') then
 				next_a_read <=  std_logic_vector(to_unsigned(2**22-4,22));
 				next_read_state <= WAIT_DATA;
 			else
@@ -170,7 +179,7 @@ fifo_machine_next_state: process (read_state, write_state, d_write, a_write, fif
 write_fifo_inst:sdram_fifo
 		port map
 		(
-			aclr 	=> wr_reset,
+			aclr 	=> wrreset_s2,
 			data	=> write_d,
 			rdclk	=> clk,
 			rdreq	=> fifo_write_rdreq,
@@ -184,7 +193,7 @@ write_fifo_inst:sdram_fifo
 read_fifo_inst:sdram_fifo
 		port map
 		(
-			aclr 	=> rd_reset,
+			aclr 	=> rdreset_s2,
 			data	=> fifo_read_data,
 			rdclk	=> rdclk,
 			rdreq	=> rdreq,

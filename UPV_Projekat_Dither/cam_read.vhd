@@ -23,7 +23,7 @@ architecture cam_read_arch of cam_read is
 	type state_type is ( WAIT_FRAME, WAIT_ROW, READ_1, READ_2 );
 	
 	signal current_state, next_state : state_type := WAIT_FRAME;
-	signal data_delayed : std_logic_vector (7 downto 0) := (others => '0');
+	signal data_delayed, data_delayed_2 : std_logic_vector (7 downto 0) := (others => '0');
 	signal x_buf	: integer range 0 to 640 := 0;
 	signal y_buf : integer range 0 to 480 := 0;
 	signal R_buf,G_buf,B_buf	: std_logic_vector (4 downto 0) := (others => '0');
@@ -74,8 +74,11 @@ state_transition:
 			R_buf <= "00000";
 			G_buf <= "00000";
 			B_buf <= "00000";
+			data_delayed <= (others => '0');
+			data_delayed_2 <= (others => '0');
 		elsif (rising_edge(Pclk)) then
 			data_delayed <= data;
+			data_delayed_2 <= data_delayed;
 			current_state <= next_state;
 			case (current_state) is
 				when WAIT_FRAME =>
@@ -84,9 +87,9 @@ state_transition:
 				when WAIT_ROW=> 
 					x_buf <= 0;
 				when READ_1 =>
-					R_buf <= data(6 downto 2);
-					G_buf <= data(1 downto 0) & data_delayed(7 downto 5);
-					B_buf <= data_delayed(4 downto 0);
+					R_buf <= data_delayed(6 downto 2);
+					G_buf <= data_delayed(1 downto 0) & data(7 downto 5);
+					B_buf <= data(4 downto 0);
 				when READ_2 =>
 					if (next_state = WAIT_ROW) then
 						y_buf <= y_buf + 1;

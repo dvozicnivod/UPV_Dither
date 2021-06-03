@@ -226,6 +226,7 @@ signal vga_valid, vga_vsync_int : std_logic;
 signal vga_data : std_logic_vector(2 downto 0);
 --Debug signals
 signal vga_r_int, vga_g_int, vga_b_int, vga_all: std_logic;
+signal vga_choose: integer range 0 to 3;
 
 BEGIN
 
@@ -292,7 +293,6 @@ clk_sdram <= clk_sdram_int;
 		valid_out  	=> dither_valid
 	);
 	
-	--dither_out <= button(2 downto 0);
 
 write_interface_inst: write_interface
 	generic map
@@ -337,8 +337,6 @@ SDRAM_control_inst: SDRAM_control_B4_fifo
 		we_n			=> sd_we,
 		clk_en		=> sd_cen
 	);
-
-	--sd_data_wr <= "0111011101000100001000100001000101110111010001000010001000010001";
 	
 read_interface_inst: read_interface
 	generic map
@@ -381,9 +379,9 @@ read_interface_inst: read_interface
 		xpos	=> vga_x_int,
 		ypos	=> vga_y_int,
 		valid	=> vga_valid,
-		Rin		=> vga_data(2),
+		Rin		=> vga_data(0),
 		Gin 	=> vga_data(1), 
-		Bin 	=> vga_data(0),
+		Bin 	=> vga_data(2),
 		Rout 	=> vga_r_int, 
 		Gout 	=> vga_g_int, 
 		Bout 	=> vga_b_int

@@ -131,9 +131,7 @@ set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVCMOS"
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"
 set_global_assignment -name TIMING_ANALYZER_REPORT_SCRIPT_INCLUDE_DEFAULT_ANALYSIS OFF
 set_global_assignment -name VHDL_FILE UPV_Projekat_Dither.vhd
-set_global_assignment -name VHDL_FILE SDRAM_control_B4.vhd
 set_global_assignment -name VHDL_FILE vga_sync_subframe.vhd
-set_global_assignment -name VHDL_FILE frame_sync.vhd
 set_global_assignment -name QIP_FILE error_memory.qip
 set_global_assignment -name VHDL_FILE dither_engine.vhd
 set_global_assignment -name VHDL_FILE cam_read.vhd
